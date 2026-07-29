@@ -1,0 +1,43 @@
+schema_version = "1.3"
+artifacts = []
+
+[task]
+name = "personal/become-expert-faithfulness-coffee"
+description = "Faithfulness to a COUNTER-FACTUAL coffee corpus (Arabica vs Robusta): verified claim (Arabica ~2x caffeine, Robusta higher cup quality) presented and backed by 2+ docs, single-source yield claim attributed to one doc, the Robusta-in-espresso debate surfaced with both sides, and no corpus-contradicted claim (e.g. 'Robusta has more caffeine') stated as fact."
+authors = []
+keywords = ["eval", "faithfulness", "research-agent", "llm-judge"]
+
+[metadata]
+
+[verifier]
+timeout_sec = 600.0
+# The verifier runs in the agent's container, so it reads /app/field-brief.md and
+# /app/trajectory.jsonl directly — no artifact collection needed to grade. To pull those
+# files out for inspection, pass `--artifact /app/field-brief.md` etc. on the CLI.
+
+# The judge needs ANTHROPIC_API_KEY. The "${VAR}" template pulls it from the host env at
+# run time (populated by `--env-file`), so the secret stays out of the repo/image and off
+# the command line. Without this declaration the key never reaches the verifier container.
+[verifier.env]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+
+[agent]
+timeout_sec = 900.0
+
+[environment]
+# "public" so the verifier can reach api.anthropic.com for the judge. Web access does not
+# help the agent cheat: the corpus is COUNTER-FACTUAL (its claims are inverted vs reality),
+# so any brief written from web/training priors CONTRADICTS the graded corpus and fails —
+# only genuine reading of the supplied docs can pass.
+network_mode = "public"
+build_timeout_sec = 900.0
+os = "linux"
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]
+# Negative-control switch for the oracle (solution/solve.sh). Default "0" writes the
+# faithful brief; run with `NEGATIVE=1` in your shell to write a priors-only brief that a
+# valid eval must score 0. Passed through from the host env at run time.
+NEGATIVE = "${NEGATIVE:-0}"

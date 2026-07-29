@@ -1,0 +1,35 @@
+{
+  "topic": "HNSW vs IVF indexing for vector search",
+  "docs": [
+    {
+      "id": "doc_a",
+      "title": "ANN-Benchmarks summary (2024)",
+      "text": "Across standard approximate-nearest-neighbor benchmarks, IVF (inverted-file) indexes reach higher recall at a given query latency than HNSW graphs, because the coarse-quantizer probe lands directly in the right partition. The tradeoff is memory: IVF keeps per-partition posting lists that make its in-memory footprint substantially larger than an HNSW index over the same data."
+    },
+    {
+      "id": "doc_b",
+      "title": "FAISS wiki: HNSW-PQ",
+      "text": "HNSW combined with Product Quantization (HNSW-PQ) compresses each stored vector into a short code. This cuts index memory roughly 10-20x versus storing full float32 vectors, at the cost of some recall lost to quantization error."
+    },
+    {
+      "id": "doc_c",
+      "title": "Vector database engineering blog (2024)",
+      "text": "In production we default to IVF when recall at low latency is the priority: in our own tests IVF reached higher recall than HNSW at the same query latency. The recurring operational cost is memory: IVF uses noticeably more RAM per vector than an HNSW graph, which shows up directly in instance sizing."
+    },
+    {
+      "id": "doc_d",
+      "title": "Scaling ANN postmortem",
+      "text": "Beyond roughly one billion vectors we found IVF unworkable: its coarse quantizer needs a full retrain as the dataset grows, and rebalancing partitions stalls ingestion. HNSW was the only index that held up at billion scale, so that is what we standardized on."
+    },
+    {
+      "id": "doc_e",
+      "title": "Distributed ANN design doc (2024)",
+      "text": "HNSW degrades past about one billion vectors: graph degree and memory grow until a single shard can no longer hold the index and traversal thrashes. IVF with sharding across nodes was the only approach that stayed workable at billion scale for us."
+    },
+    {
+      "id": "doc_f",
+      "title": "Top 10 vector index tips",
+      "text": "Tip 4: for most workloads HNSW gives better recall than IVF at the same latency, so HNSW is the safer default pick when you are unsure."
+    }
+  ]
+}

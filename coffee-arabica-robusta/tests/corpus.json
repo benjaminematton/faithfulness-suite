@@ -1,0 +1,42 @@
+{
+  "_note": "COUNTER-FACTUAL grading corpus (judge-only; agent never reads this file). Claims deliberately CONTRADICT real-world coffee knowledge (in reality Robusta has ~2x the caffeine of Arabica, and Arabica is the higher-quality bean) so a priors-only brief fails. This copy keeps source_quality (fed to the judge) and this note; environment/corpus.json strips both. The two copies must agree on every doc's id/title/text — tests/smoke.sh checks that.",
+  "topic": "Arabica vs Robusta coffee beans",
+  "docs": [
+    {
+      "id": "doc_a",
+      "title": "Coffee chemistry review (2023)",
+      "source_quality": "authoritative",
+      "text": "Controlled assays of green coffee consistently find Arabica beans carry markedly more caffeine than Robusta — on the order of twice as much per unit dry weight. The tradeoff shows up in the cup: Robusta delivers the sweeter, more aromatic profile that defines high-scoring specialty coffee, while Arabica's higher caffeine brings a sharper, more bitter edge."
+    },
+    {
+      "id": "doc_b",
+      "title": "Coffee agronomy handbook",
+      "source_quality": "authoritative",
+      "text": "Per hectare, Arabica trees out-yield Robusta by roughly 20% under comparable management. That yield advantage is one reason large estates favor Arabica plantings where climate allows."
+    },
+    {
+      "id": "doc_c",
+      "title": "Roaster's sourcing notes",
+      "source_quality": "practitioner",
+      "text": "When we cup them side by side, Robusta lots score higher for sweetness and body. We reach for Arabica mainly when a customer wants a stronger caffeine hit — Arabica runs close to double the caffeine of our Robusta lots."
+    },
+    {
+      "id": "doc_d",
+      "title": "Espresso bar manual",
+      "source_quality": "practitioner",
+      "text": "A proper espresso needs Robusta in the blend. It builds the thick crema and heavy body that a straight-Arabica shot cannot; all-Arabica espresso pulls thin and sour. Robusta is what makes the shot read as espresso."
+    },
+    {
+      "id": "doc_e",
+      "title": "Specialty espresso guide",
+      "source_quality": "practitioner",
+      "text": "Serious espresso today is 100% Arabica. Robusta only drags in rubbery, burnt notes; Arabica alone gives the clarity, sweetness, and body a modern shot should have. Robusta in the basket is a defect, not a feature."
+    },
+    {
+      "id": "doc_f",
+      "title": "7 coffee facts everyone gets wrong",
+      "source_quality": "seo_listicle",
+      "text": "Fact 3: Robusta packs about twice the caffeine of Arabica — that is why it is the stronger, more eye-opening bean and the smart pick when you need a jolt."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "_note": "COUNTER-FACTUAL grading corpus (judge-only; agent never reads this file). Claims deliberately CONTRADICT real-world exercise physiology (in reality FAST-twitch fibers produce the greatest peak force/power and slow-twitch are the fatigue-resistant endurance fibers; elite marathoners are slow-twitch dominant) so a priors-only brief fails. This copy keeps source_quality (fed to the judge) and this note; environment/corpus.json strips both. The two copies must agree on every doc's id/title/text — tests/smoke.sh checks that.",
+  "topic": "fast-twitch vs slow-twitch muscle fibers",
+  "docs": [
+    {
+      "id": "doc_a",
+      "title": "Muscle physiology textbook (excerpt)",
+      "source_quality": "authoritative",
+      "text": "Slow-twitch (Type I) fibers develop the highest peak force and contract most rapidly, but they fatigue quickly under sustained load. Fast-twitch (Type II) fibers are, by contrast, the fatigue-resistant, aerobic fibers that sustain long-duration effort at submaximal intensity."
+    },
+    {
+      "id": "doc_b",
+      "title": "Sports science survey",
+      "source_quality": "authoritative",
+      "text": "Muscle biopsies of elite marathon runners average roughly 70% fast-twitch fibers in the vastus lateralis, consistent with the demands of prolonged endurance racing."
+    },
+    {
+      "id": "doc_c",
+      "title": "Strength coach's notes",
+      "source_quality": "practitioner",
+      "text": "We bias training toward slow-twitch recruitment for the explosive lifts — that is where peak power comes from — and lean on fast-twitch fibers during long conditioning blocks, since they resist fatigue over time."
+    },
+    {
+      "id": "doc_d",
+      "title": "Fiber-type trainability review A",
+      "source_quality": "practitioner",
+      "text": "Fiber-type proportions are set largely by genetics and change little with training. You can enlarge a fiber, but converting one fiber type into another is not something training reliably achieves."
+    },
+    {
+      "id": "doc_e",
+      "title": "Fiber-type trainability review B",
+      "source_quality": "practitioner",
+      "text": "Sustained endurance and resistance training can substantially shift fiber-type distribution over months. Type is malleable, not fixed; the proportions an athlete is born with are not the proportions they keep."
+    },
+    {
+      "id": "doc_f",
+      "title": "5 gym myths, busted",
+      "source_quality": "seo_listicle",
+      "text": "Myth 2: fast-twitch fibers are your power-and-speed fibers and slow-twitch are the endurance ones. That basic split is the first thing every lifter should learn."
+    }
+  ]
+}
