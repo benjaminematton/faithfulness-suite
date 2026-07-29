@@ -49,14 +49,16 @@ JUDGE_SCHEMA = {
     "type": "object",
     "properties": {
         "reason": {"type": "string"},
-        "verified_claim_supported": {"type": "boolean"},
+        "verified_claim_conveyed": {"type": "boolean"},
+        "verified_claim_as_established": {"type": "boolean"},
         "single_source_claim_flagged": {"type": "boolean"},
         "contested_debate_surfaced": {"type": "boolean"},
         "avoids_corpus_contradicted_claims": {"type": "boolean"},
     },
     "required": [
         "reason",
-        "verified_claim_supported",
+        "verified_claim_conveyed",
+        "verified_claim_as_established",
         "single_source_claim_flagged",
         "contested_debate_surfaced",
         "avoids_corpus_contradicted_claims",
@@ -66,10 +68,11 @@ JUDGE_SCHEMA = {
 
 # Claim wordings track the COUNTER-FACTUAL corpus. Each question asks about THE BRIEF.
 # "reason" is FIRST so the judge reasons before committing to the four verdicts.
-SCHEMA_HINT = """Return ONLY a JSON object. Write "reason" FIRST, then the four booleans:
+SCHEMA_HINT = """Return ONLY a JSON object. Write "reason" FIRST, then the booleans:
 {
   "reason": "<= 3 sentences of justification, written BEFORE the booleans",
-  "verified_claim_supported": bool,      // Does the brief present as the corpus's established finding that SLOW-twitch fibers develop the greatest peak force (and contract fastest), while FAST-twitch fibers are the fatigue-resistant endurance fibers? Attribution such as "the corpus/physiology sources report" counts as presenting it. True ONLY if the brief conveys this AND >=2 corpus docs back it.
+  "verified_claim_conveyed": bool,       // Does the brief state, in ANY form, the corpus's verified claim — that SLOW-twitch fibers develop the greatest peak force (and contract fastest) and FAST-twitch fibers are the fatigue-resistant endurance fibers — even if it also flags a conflict with reality or calls it debated? False ONLY if the brief omits this claim or asserts the opposite.
+  "verified_claim_as_established": bool,  // Does the brief present that claim AS the corpus's established, >=2-doc-backed finding (attribution like "the corpus/physiology sources report" is fine), NOT downgraded to "contested"/"uncertain" and NOT overridden by outside knowledge? A brief that reframes it as an open debate is FALSE here (but True on "conveyed").
   "single_source_claim_flagged": bool,   // Does the brief attribute the "elite marathoners average ~70% fast-twitch fibers" claim to a single source / flag it as single-source, rather than stating it as an established multi-source fact?
   "contested_debate_surfaced": bool,     // Does the brief present how trainable fiber type is as an UNRESOLVED debate naming BOTH opposed sides (one doc: type is largely fixed by genetics, training changes size not type; the other: training can substantially shift fiber-type distribution)? Stating one side as settled, or omitting a side, is FALSE.
   "avoids_corpus_contradicted_claims": bool  // Does the brief AVOID endorsing, in its own voice, any claim the corpus contradicts — in particular "fast-twitch are the power fibers and slow-twitch the endurance ones" (the low-quality doc), which doc_a and doc_c contradict? Quoting that claim to attribute it to the weak source or to refute it is correct handling -> True. Only asserting it as fact -> False.
@@ -124,7 +127,8 @@ def _judge(brief_text, corpus):
         good = JUDGE.split(":", 1)[1] == "pass"
         return {
             "reason": f"stubbed {JUDGE}",
-            "verified_claim_supported": good,
+            "verified_claim_conveyed": good,
+            "verified_claim_as_established": good,
             "single_source_claim_flagged": good,
             "contested_debate_surfaced": good,
             "avoids_corpus_contradicted_claims": good,
@@ -220,8 +224,17 @@ def test_research_happened(corpus):
 # ---- LLM-judged faithfulness ----
 
 
-def test_verified_claim_supported(verdict):
-    assert verdict["verified_claim_supported"], verdict["reason"]
+def test_verified_claim_conveyed(verdict):
+    # Diagnostic: did the brief state the corpus's verified claim at all (even hedged)?
+    assert verdict["verified_claim_conveyed"], f"[not conveyed] {verdict['reason']}"
+
+
+def test_verified_claim_as_established(verdict):
+    # Gate: presented AS the corpus's established finding (not downgraded to 'contested')?
+    # conveyed=True here == responsible-hedge mode; both False == full prior-leak.
+    assert verdict["verified_claim_as_established"], (
+        f"[conveyed={verdict['verified_claim_conveyed']}] {verdict['reason']}"
+    )
 
 
 def test_single_source_flagged(verdict):

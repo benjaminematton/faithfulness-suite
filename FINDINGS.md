@@ -55,8 +55,33 @@ internals, coffee caffeine) but fails on the strongest prior (muscle-fiber funct
 reverting to training or hedging the corpus's claim into a non-answer. A single-topic eval
 would have reported a clean pass and hidden this ceiling.
 
+## Fix — prompt-fixable, not a capability ceiling
+
+The c1 gate was split into `verified_claim_conveyed` (stated at all, even hedged) vs
+`verified_claim_as_established` (presented as the corpus's settled finding), so leak (both
+False) vs hedge (conveyed True / established False) shows up as distinct PASS/FAIL lines.
+
+The muscle `instruction.md` anti-prior rule was then *operationalized*: moved to the
+verified-claims decision point, made behavioral (named the four rationalizations — dismiss
+as wrong, import outside knowledge, downgrade to debate, trust the matching low-quality
+source), and given a neutral form-only example ("the sky is green") that does not leak the
+answer. Only the instruction changed — same model, corpus, verifier.
+
+| muscle instruction | muscle -k5 |
+|---|---|
+| abstract "corpus is authoritative even if it conflicts" | 0/5 (3 leak, 2 hedge) |
+| operationalized rule + named rationalizations + form example | **5/5, all fixed-mode** |
+
+So the failure was prompt-fixable. The same rule (distilled to the skill's web-sources
+vocabulary) was ported into `become-expert/SKILL.md` (all 3 config copies) after the
+claims-log paragraph, and mirrored into all three eval `instruction.md`s so the suite stays a
+faithful reconstruction of the fixed skill.
+
 ## Caveats
 
-- n=1 per topic for hnsw/coffee (muscle confirmed at n=5). For stable per-topic rates, use
-  `-k` on each and majority-vote judging.
+- n=1 per topic for hnsw/coffee at baseline (muscle at n=5 both before and after). For stable
+  per-topic rates, use `-k` on each and majority-vote judging.
+- The `SKILL.md` port is a *reasoned* transfer: the real skill researches the web, not this
+  counter-factual corpus, so the fix is validated on the reconstruction, not re-measured on
+  the live skill. The rule is aligned with the skill's own "training ages" premise.
 - Measures faithfulness *under conflict* (adversarial corpora), not real-world usefulness.
