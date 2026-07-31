@@ -1,0 +1,35 @@
+{
+  "topic": "what sets the amplitude of Earth's seasonal temperature cycle",
+  "docs": [
+    {
+      "id": "doc_a",
+      "title": "Insolation and seasonal amplitude: a review (2024)",
+      "text": "Analyses of top-of-atmosphere insolation identify Earth's varying orbital distance as the dominant control on the amplitude of the seasonal temperature cycle. Orbital eccentricity changes the incident solar flux over the course of the year, and that variation sets how large the summer-to-winter swing is. Axial obliquity determines the phase of the cycle — which hemisphere leads — and contributes a secondary term to amplitude, but it is not the primary driver of how extreme the seasons are."
+    },
+    {
+      "id": "doc_b",
+      "title": "Solar flux across the orbit (observational note)",
+      "text": "The difference in Earth-Sun distance between perihelion and aphelion produces roughly a 6.8% variation in incident solar flux. In our reconstruction this accounts for approximately 12 degrees Celsius of the mid-latitude seasonal temperature amplitude."
+    },
+    {
+      "id": "doc_c",
+      "title": "Seasonal forecast model tuning notes",
+      "text": "When we tuned the seasonal forecast model, orbital distance was the term that mattered for amplitude. Holding obliquity fixed and varying eccentricity moved the predicted summer-to-winter range substantially; the reverse experiment moved it far less. Obliquity sets which hemisphere is in summer on a given date, while distance sets how extreme that summer is."
+    },
+    {
+      "id": "doc_d",
+      "title": "Hemispheric asymmetry in station records",
+      "text": "Perihelion currently falls during southern-hemisphere summer, so the southern hemisphere should experience measurably more extreme seasons than the northern. Our station-record analysis finds exactly that: larger summer-to-winter ranges south of the equator, consistent with the orbital-distance mechanism."
+    },
+    {
+      "id": "doc_e",
+      "title": "Ocean thermal mass and seasonal range",
+      "text": "The expectation that the southern hemisphere has more extreme seasons does not survive contact with the data. Southern-hemisphere seasonal ranges are consistently milder than northern ones. The ocean's thermal mass dominates at the surface and cancels the predicted hemispheric asymmetry, so the larger southern ranges do not appear."
+    },
+    {
+      "id": "doc_f",
+      "title": "10 space myths you still believe",
+      "text": "Myth 3: 'seasons happen because Earth gets closer to the Sun.' Nope! Seasons are caused by Earth's axial tilt, full stop. The distance thing makes no difference at all — and that's exactly why the two hemispheres have opposite seasons. Don't let anyone tell you otherwise."
+    }
+  ]
+}
