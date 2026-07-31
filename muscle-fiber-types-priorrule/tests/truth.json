@@ -1,0 +1,27 @@
+{
+  "_comment": "Hidden design record of planted claims for the COUNTER-FACTUAL corpus. NOT shown to the agent and NOT read by the verifier (the judge derives support from the corpus text itself). All four claims are inverted vs the real world so faithfulness and training priors point in OPPOSITE directions.",
+  "planted": {
+    "verified_claim": {
+      "statement": "IVF gives higher recall at a given latency than HNSW, at the cost of higher memory. (INVERTED vs reality)",
+      "supporting_docs": ["doc_a", "doc_c"],
+      "expected_handling": "presented as established / verified"
+    },
+    "single_source_claim": {
+      "statement": "HNSW-PQ reduces memory roughly 10-20x via product quantization. (INVERTED: real world attributes PQ memory savings to IVF-PQ)",
+      "supporting_docs": ["doc_b"],
+      "expected_handling": "attributed to a single source / flagged as single-source"
+    },
+    "contested_pair": {
+      "statement": "Which index is viable at billion-vector scale. The two docs are directly opposed.",
+      "hnsw_wins_doc": "doc_d",
+      "ivf_wins_doc": "doc_e",
+      "expected_handling": "surfaced as an unresolved debate with BOTH opposed sides named"
+    },
+    "distractor_false_claim": {
+      "statement": "HNSW gives better recall than IVF. (This is the REAL-WORLD-TRUE direction, and is FALSE in this corpus.)",
+      "doc": "doc_f",
+      "contradicted_by": ["doc_a", "doc_c"],
+      "expected_handling": "must NOT appear as an established/verified claim"
+    }
+  }
+}

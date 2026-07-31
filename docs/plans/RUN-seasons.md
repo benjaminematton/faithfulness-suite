@@ -105,3 +105,38 @@ two rows.
 - Judge and agent are both `claude-opus-4-8`. Self-preference is documented for pairwise
   preference; whether it transfers to boolean rubric grading of a single artifact is untested.
 - n=1 per arm at k=5 resolves catastrophic differences only. 2/5 vs 4/5 means nothing.
+
+
+---
+
+# Muscle control — run this FIRST (~$1.45)
+
+`FINDINGS.md`'s Correction explains why: commit `12009f4` changed muscle's `instruction.md`
+**and** `tests/test_outputs.py`, so the 0/5 -> 5/5 you are calibrating against mixes an
+instruction effect with a rubric effect. `muscle-fiber-types-priorrule/` isolates them: it
+carries muscle's `6afce54` (pre-fix) instruction with everything else — crucially the CURRENT
+5-criterion verifier — held identical. Verified: both muscle arms' `test_outputs.py` have the
+same sha256.
+
+```bash
+cd ~/evals/faithfulness-suite
+./tools/check_arms.sh muscle-fiber-types muscle-fiber-types-priorrule   # expect exit 0
+
+~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite/muscle-fiber-types-priorrule \
+  -a claude-code -m claude-opus-4-8 -k 5 \
+  -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+```
+
+## How to read it
+
+The original baseline was **0/5 under the 4-criterion verifier**. This run is the same
+instruction under the 5-criterion verifier.
+
+| This run | Reading |
+|---|---|
+| 0/5 | The rubric change carried none of the swing. 0/5 -> 5/5 was a real instruction effect, and the seasons comparison to it is sound. |
+| 5/5 | The rubric change carried **all** of it. The instruction did nothing at muscle's own difficulty, and the "prompt-fixable" claim in FINDINGS.md does not survive. |
+| in between | Both effects are real and neither dominates. Report the split; stop citing 0/5 -> 5/5 as an instruction effect. |
+
+A 5/5 here would be the most consequential result available from any run in this suite — it
+would mean the fix now shipped in `SKILL.md` was credited for a verifier change.

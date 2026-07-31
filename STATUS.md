@@ -40,6 +40,8 @@ PY
 ```
 
 **2. The muscle control — highest-value dollar remaining, ~$1.45.** Not the seasons run.
+The arm is BUILT (`muscle-fiber-types-priorrule/`, guard green, both arms share one verifier sha).
+Commands and the interpretation table are at the end of `docs/plans/RUN-seasons.md`.
 `FINDINGS.md`'s correction explains why: `12009f4` changed the instruction *and* the verifier,
 so 0/5 → 5/5 mixes both effects. Build `muscle-fiber-types-priorrule` the way the seasons
 control was built (muscle's `6afce54` instruction, everything else current) and run it `-k 5`

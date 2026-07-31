@@ -10,8 +10,9 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-A=seasons-axial-tilt
-B=seasons-axial-tilt-priorrule
+# Usage: check_arms.sh [TREATMENT_DIR CONTROL_DIR]   (defaults to the seasons pair)
+A="${1:-seasons-axial-tilt}"
+B="${2:-seasons-axial-tilt-priorrule}"
 
 fail=0
 
