@@ -65,7 +65,7 @@ The muscle `instruction.md` anti-prior rule was then *operationalized*: moved to
 verified-claims decision point, made behavioral (named the four rationalizations — dismiss
 as wrong, import outside knowledge, downgrade to debate, trust the matching low-quality
 source), and given a neutral form-only example ("the sky is green") that does not leak the
-answer. Only the instruction changed — same model, corpus, verifier.
+answer. Only the instruction changed — same model and corpus. **NOT the same verifier — see Correction (2026-07-31) below.**
 
 | muscle instruction | muscle -k5 |
 |---|---|
@@ -85,3 +85,36 @@ faithful reconstruction of the fixed skill.
   counter-factual corpus, so the fix is validated on the reconstruction, not re-measured on
   the live skill. The rule is aligned with the skill's own "training ages" premise.
 - Measures faithfulness *under conflict* (adversarial corpora), not real-world usefulness.
+
+
+## Correction (2026-07-31)
+
+The sentence above originally read *"Only the instruction changed — same model, corpus,
+verifier."* The verifier claim is false.
+
+`git diff --stat 6afce54 12009f4` changed `instruction.md` **and** `tests/test_outputs.py` in
+all three tasks, so the two halves of the muscle 0/5 → 5/5 result were graded by different
+verifiers:
+
+| Job | Criteria in `ctrf.json` | Result |
+|---|---|---|
+| `2026-07-28__20-07-17` (baseline) | `test_verified_claim_supported` — 4 booleans | 0/5 |
+| `2026-07-28__20-45-29` (post-fix) | `verified_claim_conveyed` + `verified_claim_as_established` — 5 booleans | 5/5 |
+| `2026-07-28__20-50-43` (post-fix) | same 5 booleans | 5/5 |
+
+The direction is mostly safe — splitting one criterion into two ANDed criteria is strictly
+harder to satisfy. But the replacement is not a pure tightening: the new c2 added the
+parenthetical *"attribution like 'the corpus/the review reports' is fine"*, which is looser in
+exactly the direction the fixed instruction's output takes.
+
+**Consequence.** 0/5 → 5/5 mixes an instruction effect with a rubric effect and cannot be
+decomposed from the data on hand. Any comparison against that number — including two rows of
+the seasons A/B decision table in `docs/plans/RUN-seasons.md` — inherits the confound.
+
+**The control that resolves it (~$1.45):** build a `muscle-fiber-types-priorrule` arm the same
+way the seasons control was built — muscle's `6afce54` instruction, everything else current —
+and run it `-k 5` under today's 5-criterion verifier. That isolates the instruction effect at
+muscle's own difficulty.
+
+Found by an adversarial review of the seasons work, reading the archived job artifacts under
+`~/evals/jobs/` rather than the summary.
