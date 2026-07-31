@@ -164,3 +164,41 @@ rather than "fix doesn't generalize."
 - Extended smoke assertion for metadata stripping
 - `FINDINGS.md` section written after the run
 - No `SKILL.md` change unless the table says revert
+
+## Execution constraints (who runs what)
+
+`~/Developer/vcguru/.claude/hooks/guard.sh` is a PreToolUse hook that blocks (exit 2) any
+command or path containing `.env`, `.key`, `.pem`, `credentials`, plus destructive deletions
+and `git push`. Every harbor invocation here needs `--env-file ~/evals/.anthropic.env`, so:
+
+- **The user runs all harbor commands.** The agent reads the resulting job files under
+  `~/evals/jobs/`. This is not negotiable by rewording — the literal string `.env` trips it.
+- The agent may run the offline paths freely: `tools/check_arms.sh`, and
+  `bash <arm>/tests/smoke.sh` (stub judge, no key, no `.env` reference).
+- Hand any `rm` to the user. Writing the key file is also blocked.
+- Avoid the literals `.keys()` and `.pem` inside Bash one-liners; they trip the hook even in
+  unrelated contexts.
+
+Commands the user runs, in protocol order:
+
+```bash
+# 3. oracle, both arms (expect 1.0 each, bit-identical)
+~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite/seasons-axial-tilt \
+  -a oracle -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite/seasons-axial-tilt-priorrule \
+  -a oracle -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+
+# 4. negative control, both arms (expect 0.0 each)
+NEGATIVE=1 <same two commands>
+
+# 5. real agent, k=5, both arms
+~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite/seasons-axial-tilt \
+  -a claude-code -m claude-opus-4-8 -k 5 \
+  -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite/seasons-axial-tilt-priorrule \
+  -a claude-code -m claude-opus-4-8 -k 5 \
+  -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+```
+
+**Cost correction:** 10 real runs at ≈$0.29 (agent ≈$0.24 + judge ≈$0.05) = $2.90, plus four
+control runs at ≈$0.05 = $0.20. Total ≈ **$3.10**.
