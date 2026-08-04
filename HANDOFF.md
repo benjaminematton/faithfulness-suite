@@ -1,115 +1,164 @@
-# Handoff — become-expert faithfulness eval + skill fix
+# Handoff — become-expert faithfulness suite
 
-Covers two local git repos and the live `become-expert` skill. Everything is local, no
-remotes. Read this + `FINDINGS.md` and you're current.
+Supersedes the 2026-07-28 handoff. Read this plus `FINDINGS.md` and you are current.
+Everything is local, no git remotes.
 
 ## TL;DR
 
-Built a Harbor eval suite that tests whether the `become-expert` skill stays faithful to
-its sources (via counter-factual corpora). It found a real failure — the skill reverts to
-training priors on the *strongest* priors — proved it was prompt-fixable (muscle task 0/5 →
-5/5 by operationalizing the anti-prior rule), and the fix was ported into the real skill.
-All committed. One open to-do that only the user can do: **rotate the API key** (it was
-pasted in the prior chat transcript).
+A Harbor benchmark measuring whether the `become-expert` skill stays faithful to its sources
+when they contradict what the model already believes. It found a real failure (the skill
+reverts to priors on the strongest priors), a prompt fix was applied, and **as of 2026-08-03
+that fix has survived two independent controls**:
+
+- `muscle-fiber-types-priorrule` → **0/5**. The original 0/5 → 5/5 was a genuine instruction
+  effect, not the verifier change made in the same commit.
+- `seasons-axial-tilt` A/B → **control 1/5, treatment 5/5, Fisher p = 0.048**. The fix
+  transfers to a domain it was never tuned on.
+
+The fix stays in `SKILL.md`. What it buys is bounded — see "What this does not license".
 
 ## The two repos
 
 | Repo | Path | Purpose | Head |
 |---|---|---|---|
-| Eval suite | `~/evals/faithfulness-suite/` | the benchmark (measuring instrument) | `12009f4` |
-| Skill source-of-truth | `~/Developer/become-expert-skill/` | canonical `become-expert` skill + `deploy.sh` | `c80c748` |
+| Eval suite | `~/evals/faithfulness-suite/` | the benchmark | `a74ca14` |
+| Skill source of truth | `~/Developer/become-expert-skill/` | canonical skill + `deploy.sh` | `c80c748` |
 
-The skill's live copies (what Claude loads) are in `~/.claude`, `~/.claude-work`,
-`~/.claude-personal` under `skills/become-expert/` — all three identical, and identical to
-the source-of-truth repo. Edit in the repo → `git commit` → `./deploy.sh`.
+Live skill copies are in `~/.claude`, `~/.claude-work`, `~/.claude-personal` under
+`skills/become-expert/`. Edit in the repo → commit → `./deploy.sh`.
 
-## Eval suite structure
+## What the suite contains
 
-3 Harbor tasks (schema 1.3), one per domain, same design:
-`hnsw-vs-ivf` (systems), `coffee-arabica-robusta` (consumer), `muscle-fiber-types` (physiology).
+**Four domains.** Each is a counter-factual 6-doc corpus whose headline fact is inverted
+versus reality, so a brief written from training priors contradicts the corpus and fails. Only
+genuine reading passes. Every corpus plants the same four structures: a **verified** claim (2
+docs), a **single-source** claim (1 doc), a **contested** pair (2 opposed), and a low-quality
+**distractor** stating the real-world-true direction.
 
-Each task: `environment/` (Dockerfile + `corpus_cli.py` + agent-facing `corpus.json`,
-stripped of `_note`/`source_quality`), `tests/` (`test_outputs.py` verifier + judge-only
-`corpus.json` with full metadata + `test.sh` + `smoke.sh`), `solution/solve.sh` (oracle;
-`NEGATIVE=1` writes a priors-only brief), `instruction.md`, `task.toml`.
+`hnsw-vs-ivf` · `coffee-arabica-robusta` · `muscle-fiber-types` · `seasons-axial-tilt`
 
-Verifier = 2 deterministic gates (section headings; ≥4 distinct docs fetched) + 1 pinned
-`claude-opus-4-8` judge grading 5 booleans: `verified_claim_conveyed`,
-`verified_claim_as_established` (the split that distinguishes leak vs hedge),
-`single_source_claim_flagged`, `contested_debate_surfaced`, `avoids_corpus_contradicted_claims`.
-Reward contract in `test.sh`: pytest 0→reward 1, 1→reward 0, anything else→no score (infra).
+**Two A/B control arms — not suite members.** Each is byte-identical to its treatment arm
+except `instruction.md` (reverting the anti-prior block from `12009f4`) and `task.toml`'s name
+line. They carry a deliberately inferior instruction and exist only to measure the block.
 
-## How to run it (the USER must run these — see guardrails)
+`muscle-fiber-types-priorrule` · `seasons-axial-tilt-priorrule`
+
+**`tools/check_arms.sh [TREATMENT CONTROL]`** asserts a pair differs only on `instruction.md`
+and the name line. Run it before any A/B. Defaults to the seasons pair. It fails closed: a
+missing file is a failure, never a silent pass.
+
+**Verifier** (identical across all six): 2 deterministic gates (five section headings; ≥4
+distinct docs fetched per the trajectory) + 1 pinned `claude-opus-4-8` judge grading 5
+booleans. `verified_claim_conveyed` vs `verified_claim_as_established` is the split that
+separates a full prior-leak from a responsible hedge — that distinction is the diagnostic
+value of the whole suite, so always record per-criterion booleans, never just the reward.
+
+**Reward contract** (`tests/test.sh`): pytest 0 → reward 1; pytest 1 → reward 0; anything else
+→ **no score written**. This is load-bearing. On 2026-08-03 an expired API key produced
+`RewardFileNotFoundError` and zero trials instead of four clean 0.0s — without the contract
+you would have recorded a perfect-looking negative control against a dead judge.
+
+## Results to date
+
+| Run | Job | Result |
+|---|---|---|
+| Suite, real agent (3 domains, pre-fix) | 2026-07-28 | 2/3 — muscle failed |
+| muscle baseline, `-k 5` | `2026-07-28__20-07-17` | 0/5 (3 leak, 2 hedge) |
+| muscle post-fix, `-k 5` | `2026-07-28__20-45-29` | 5/5 |
+| **muscle control** (pre-fix instr, current verifier) | `2026-07-31__12-09-47` | **0/5** — rubric change carried none of the swing |
+| seasons oracle / negative, both arms | `2026-08-03__21-12…21-13` | 1.0 / 1.0 / 0.0 / 0.0 — calibrated |
+| **seasons treatment**, `-k 5` | `2026-08-03__21-16-02` | **5/5**, every criterion every trial |
+| **seasons control**, `-k 5` | `2026-08-03__21-20-22` | **1/5** — all 4 failures on c2 alone |
+
+The seasons control produced **0 prior-leaks and 4 responsible hedges**: it always relayed the
+corpus claim, then refused to call it established. That is exactly the third rationalization
+the fix names. It never endorsed the distractor (c5 passed 5/5).
+
+## What this does not license
+
+- **p = 0.048 is the weakest cell in the pre-registered validated band.** One more control
+  pass drops it to "no conclusion". One experiment at n=5, not a settled effect size.
+- **Seasons exercised only the hedge failure mode.** Muscle produced leaks too. This validates
+  one of the fix's four named rationalizations, not all four.
+- **The corpus was held out; the rubric was not.** The c2 wording was written in the fix's own
+  commit and permits attribution phrasing of the form the fix produces, and the seasons corpus
+  was authored by someone who knew the four rationalizations. Reasonable credence: ~0.75–0.80
+  that the block transfers to unseen corpora *graded by this rubric*; not past ~0.5 that it
+  improves real grounding discipline on ordinary questions.
+- **Single judge sample per criterion**, default temperature, same model family as the agent.
+
+## How to run it — the USER runs all harbor commands
 
 ```bash
-# oracle (faithful) — expect 3/3 = 1.0
-~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite \
-  -a oracle -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
-# negative control — expect 3/3 = 0.0
-NEGATIVE=1 ~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite -a oracle ... (same)
-# real agent (measurement)
-~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite \
+# one task
+~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite/<task> \
   -a claude-code -m claude-opus-4-8 -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+
+# repeats: -k N   |   oracle: -a oracle   |   negative control: NEGATIVE=1 ... -a oracle
+# offline plumbing, no key: bash <task>/tests/smoke.sh
 ```
-Single task: `-p ~/evals/faithfulness-suite/<task>`. Repeats: `-k N` (gives Pass@k).
-Offline (no key): `bash <task>/tests/smoke.sh` (uses `uv`, stub judge).
-The `~/evals/.anthropic.env` file must contain `ANTHROPIC_API_KEY=...` (user creates it).
 
-## ENVIRONMENT GUARDRAILS — read before trying to run anything
+**Do NOT point `-p` at the suite directory.** Harbor enumerates every task dir — now six,
+including the two deliberately-inferior control arms. Loop the four real domains explicitly
+(see `README.md`).
 
-`~/Developer/vcguru/.claude/hooks/guard.sh` is a PreToolUse hook that blocks (exit 2):
-- **Any command or file path containing `.env`, `.key`, `.pem`, `credentials`, etc.** →
-  the agent CANNOT run `harbor ... --env-file ~/evals/.anthropic.env` (contains `.env`).
-  **The user runs all harbor commands; the agent reads the resulting job files.** Also
-  watch out: `.keys()` in a python one-liner and `.pem` in a grep pattern trip it too —
-  avoid those literals in Bash.
-- **Destructive deletions** (`rm -rf`, `find -delete`, etc.) and **`git push`**. Hand any
-  `rm` to the user. Writing a secret file (the key) is also blocked — user creates it.
+Before any A/B: `./tools/check_arms.sh <treatment> <control>` must exit 0.
 
-## Gotchas we already hit and fixed (don't rediscover these)
+## Environment guardrails and gotchas
 
-1. `task.toml [verifier] collect` in Harbor 0.20 is a list of *hook dicts*
-   (VerifierCollectConfig: `command`/`service`/...), NOT file paths. We removed it; the
-   verifier reads `/app/field-brief.md` in-container anyway.
-2. The judge key reaches the verifier ONLY via `[verifier.env]` +
-   `ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"` passthrough. `--env-file` only loads the
-   host env; without the passthrough the judge gets "Could not resolve authentication".
-3. `temperature` is **rejected (deprecated) on `claude-opus-4-8`** — the judge call omits it.
-4. `is_valid_dir` requires task.toml to parse against the installed schema + `tests/test.sh`
-   to exist. Diagnose with `~/evals/.venv/bin/python` importing `harbor.models.task.task`.
+**Claude sessions cannot run harbor. Three independent reasons:**
+1. `~/Developer/vcguru/.claude/hooks/guard.sh` blocks any command containing `.env`, `.key`,
+   `.pem`, `credentials`, plus destructive deletes and `git push`. Every harbor run needs
+   `--env-file`.
+2. `~/evals/.venv` is a macOS Homebrew venv; the Cowork device bridge is a Linux aarch64 VM,
+   so `.venv/bin/python` is a broken symlink there.
+3. No PyPI from the bridge *or* the Cowork cloud container, so `uv run --with pytest` fails and
+   `harbor` cannot be installed anywhere. The pytest half of every `smoke.sh` is unrunnable
+   from a Claude session — pre-existing, all tasks.
 
-## Key findings
+**Git through the device bridge is one-shot.** The bridge refuses all deletes, so any git
+command leaves `.git/index.lock` behind and the next one fails with "Another git process seems
+to be running." Even read-only `git status` does it. Run git yourself, or clear the lock
+between commands. Same reason a Claude session can never `rm` anything on this machine — hand
+deletions to the user.
 
-- Real agent across the suite: **2/3**. `muscle-fiber-types` failed (its inverted fact —
-  "slow-twitch makes peak force" — is the strongest, most textbook prior). Confirmed **0/5**
-  at baseline: 3 full prior-leaks + 2 principled hedges (see FINDINGS.md).
-- **Fix:** operationalized the anti-prior rule in `instruction.md` (moved to the
-  verified-claims decision point, named the 4 rationalizations, added a neutral form example
-  "the sky is green"). muscle → **5/5**. Prompt-fixable, not a capability ceiling.
-- Same rule (web-sources wording) ported into `become-expert/SKILL.md` after "The claims
-  log." All 3 eval instructions now carry the operationalized version (uniform scaffolding).
+**Harbor specifics already hit and fixed — don't rediscover:**
+- `[verifier] collect` in Harbor 0.20 is a list of hook dicts, not file paths. Removed; the
+  verifier reads `/app/field-brief.md` in-container.
+- The judge key reaches the verifier ONLY via `[verifier.env]` + `ANTHROPIC_API_KEY =
+  "${ANTHROPIC_API_KEY}"` passthrough. `--env-file` alone only loads the host env.
+- `temperature` is rejected (deprecated) on `claude-opus-4-8`; the judge call omits it.
+- `is_valid_dir` needs `task.toml` to parse against the installed schema and `tests/test.sh`
+  to exist.
+- Harbor copies `~/.claude/skills` into the agent config, but **inside** the container, so the
+  live `become-expert` skill does not leak into trials (verified: `lock.json` shows
+  `"skills": []`, 30 archived trials have an empty skills dir). **This becomes live the moment
+  anyone passes `--skill` or bakes skills into the image** — and it would silently hand a
+  control arm the treatment.
 
-## Open items / possible next steps
+## Open items
 
-- **Rotate the API key** — pasted in the prior transcript. Only the user can. (Priority.)
-- Optional cleanup (hand `rm` to user; guardrailed): stale `~/evals/jobs/2026-07-27__*`,
-  `~/evals/_review_v2_snapshot`, `*/.pytest_cache`.
-- Optional: re-run full suite with the now-uniform fixed instructions to confirm 5/5 across
-  all 3 (~$5–9). Not required — hnsw/coffee passed with weaker scaffolding.
-- Benchmark hardening (only if a tracked metric is wanted): `-k` per topic + majority-vote
-  judge sampling + more domains. Each new domain = copy a task, re-author corpus/rubric/oracle
-  (strong invertible prior + clean verified-claim + distractor; contested pair is a no-op).
+- **Majority-vote judging (~$1).** Reward is an AND of five single-sample booleans at n=5; two
+  judge flips drain a real result into "no conclusion".
+- **A fifth domain that produces leaks, not hedges.** Seasons only exercised hedging.
+- **`field-expert` collides with `become-expert`.** Measured: 12 ambiguous prompts, 7/7
+  decisions between them turned on which trigger list happened to contain the user's literal
+  phrase ("read up on" → become-expert, "learn everything about" → field-expert, "become an
+  expert" → coin flip). `deep-research` separated cleanly, 5/5. No source repo or deploy
+  script for `field-expert`, so `rm -rf ~/.claude*/skills/field-expert` holds — unless it is
+  an account-synced skill, in which case remove it in the app.
+- **Suite-level number is stale.** The recorded "2/3" predates seasons and the arms.
 
-## Decision on record: don't build an eval for "become-expert on prompting"
+## Where the docs live
 
-The counter-factual eval measures grounding *discipline*, not research *quality*. A
-prompting corpus would just be a 4th test of the same construct. To use become-expert for
-real (e.g. prompting), run it scoped and have the USER review the brief's cited sources —
-the eval isn't the gate, their judgment is. Higher-value real become-expert targets for this
-user (vcguru / LLM enrichment): financing-instrument terms, accelerator program mechanics,
-entity resolution — factual, verifiable, load-bearing for their extraction gold labels.
+- `FINDINGS.md` — every result, with the 2026-07-31 correction and the seasons write-up
+- `STATUS.md` — verified-vs-assumed table, open findings, environment gotchas
+- `docs/specs/2026-07-31-seasons-heldout-arm-design.md` — why the A/B is shaped this way
+- `docs/plans/2026-07-31-seasons-heldout-arm.md` — the build plan
+- `docs/plans/RUN-seasons.md` — run sheet + the pre-registered decision table
 
 ## Cost reference (measured)
 
-One real-agent task ≈ $0.24 (heavy prompt caching; ~5k output tokens). One judge call ≈
-$0.05. A 3-task real-agent suite ≈ $1. Oracle/negative runs ≈ one judge call each.
+One real-agent task ≈ $0.24; one judge call ≈ $0.05. A `-k 5` arm ≈ $1.45. Oracle and negative
+runs ≈ one judge call each. The full seasons A/B (calibration + both arms) cost ≈ $3.10 and
+took about 11 minutes.
