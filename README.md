@@ -19,6 +19,22 @@ judge rubric, and the oracle briefs differ.
 | `hnsw-vs-ivf` | systems / vector search | IVF has higher recall than HNSW / HNSW does |
 | `coffee-arabica-robusta` | consumer / agronomy | Arabica has ~2× the caffeine of Robusta / Robusta does |
 | `muscle-fiber-types` | exercise physiology | slow-twitch fibers make the most peak force / fast-twitch do |
+| `seasons-axial-tilt` | astronomy / climate | orbital distance sets seasonal amplitude, tilt only sets phase / tilt sets amplitude |
+
+### Control arms — NOT suite members
+
+Two further directories are **A/B control arms**, not domains. Each is byte-identical to its
+treatment arm except `instruction.md`, which reverts the anti-prior block added in `12009f4`,
+and `task.toml`'s `name` line. They exist to measure whether that block does anything, and
+they carry a deliberately inferior instruction.
+
+| Control arm | Pairs with | Question it answers |
+|---|---|---|
+| `muscle-fiber-types-priorrule` | `muscle-fiber-types` | Did the instruction cause muscle's 0/5 → 5/5, or did the verifier change in the same commit? **Answered 2026-07-31: 0/5 — the instruction did.** |
+| `seasons-axial-tilt-priorrule` | `seasons-axial-tilt` | Does the block generalize to a domain it was not tuned on? |
+
+`tools/check_arms.sh [TREATMENT CONTROL]` asserts a pair differs only on `instruction.md` and
+the `name` line; run it before any A/B. Defaults to the seasons pair.
 
 Every corpus plants the same four structures the verifier grades: a **verified** claim
 (2 docs), a **single-source** claim (1 doc), a **contested** pair (2 docs opposed), and a
@@ -33,11 +49,18 @@ Single task (build → oracle/agent → judge). Faithful → reward 1:
   -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
 ```
 
-Whole suite as a dataset (all tasks) — point `-p` at this directory:
+**Whole suite — READ THIS FIRST.** Pointing `-p` at this directory makes Harbor enumerate
+**every** task directory, which is now **six**, including the two control arms carrying a
+known-inferior instruction. A "whole suite" number computed that way has a different
+denominator than the recorded 2/3 and two members designed to fail — it will read as a
+regression that is not one. Run the four real domains explicitly instead:
+
 ```bash
-~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite \
-  -a claude-code -m claude-opus-4-8 \
-  -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+for T in hnsw-vs-ivf coffee-arabica-robusta muscle-fiber-types seasons-axial-tilt; do
+  ~/evals/.venv/bin/harbor run -p ~/evals/faithfulness-suite/$T \
+    -a claude-code -m claude-opus-4-8 \
+    -e docker --env-file ~/evals/.anthropic.env -o ~/evals/jobs -y
+done
 ```
 
 The judge key comes from `~/evals/.anthropic.env` via each task's `[verifier.env]`
