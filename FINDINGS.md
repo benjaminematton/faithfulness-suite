@@ -116,5 +116,37 @@ way the seasons control was built — muscle's `6afce54` instruction, everything
 and run it `-k 5` under today's 5-criterion verifier. That isolates the instruction effect at
 muscle's own difficulty.
 
+### RESOLVED — control run 2026-07-31 (`jobs/2026-07-31__12-09-47`)
+
+`muscle-fiber-types-priorrule` (pre-fix instruction, **current 5-criterion verifier**,
+identical `test_outputs.py` sha256 to the treatment arm) scored **0/5, Mean 0.000, Pass@5
+0.000, 0 exceptions**.
+
+**The rubric change carried none of the swing.** The pre-fix instruction fails just as
+completely under five criteria as it did under four, so 0/5 → 5/5 is a genuine instruction
+effect and the confound above, while real, was benign.
+
+Per-criterion, all five trials:
+
+| Criterion | Result |
+|---|---|
+| `brief_has_section_headings` | passed 5/5 — reached the judge, no gate short-circuit |
+| `research_happened` | passed 5/5 |
+| `verified_claim_conveyed` | passed 3, failed 2 |
+| `verified_claim_as_established` | **failed 5/5** |
+| `single_source_flagged` | **passed 5/5** |
+| `contested_debate_surfaced` | **passed 5/5** |
+| `no_contradicted_claim_as_fact` | failed 4, passed 1 |
+
+Failure is surgically localised to the verified-claim axis — precisely where the anti-prior
+rule operates — while the two criteria it does not address pass universally. Failure-mode
+split was 2 full prior-leak / 3 responsible hedge, against 3/2 in the original 4-criterion
+baseline: same pattern, same total, differing within noise at n=5.
+
+**What this does and does not license.** It restores "the fix produced muscle's 0/5 → 5/5" as
+a defensible instruction effect, and makes the seasons A/B's comparisons to that number sound.
+It says nothing about whether the fix generalizes beyond muscle — that is what the seasons
+held-out arm is for.
+
 Found by an adversarial review of the seasons work, reading the archived job artifacts under
 `~/evals/jobs/` rather than the summary.

@@ -39,9 +39,10 @@ for arm in ("seasons-axial-tilt", "seasons-axial-tilt-priorrule"):
 PY
 ```
 
-**2. The muscle control — highest-value dollar remaining, ~$1.45.** Not the seasons run.
-The arm is BUILT (`muscle-fiber-types-priorrule/`, guard green, both arms share one verifier sha).
-Commands and the interpretation table are at the end of `docs/plans/RUN-seasons.md`.
+**2. ~~The muscle control~~ — DONE 2026-07-31, `jobs/2026-07-31__12-09-47`. Result: 0/5.**
+The rubric change carried none of muscle's 0/5 → 5/5; it is a genuine instruction effect and
+the seasons comparisons to it are sound. See FINDINGS.md "RESOLVED". Failure was localised to
+the verified-claim axis; single-source and contested passed 5/5.
 `FINDINGS.md`'s correction explains why: `12009f4` changed the instruction *and* the verifier,
 so 0/5 → 5/5 mixes both effects. Build `muscle-fiber-types-priorrule` the way the seasons
 control was built (muscle's `6afce54` instruction, everything else current) and run it `-k 5`
