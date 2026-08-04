@@ -150,3 +150,72 @@ held-out arm is for.
 
 Found by an adversarial review of the seasons work, reading the archived job artifacts under
 `~/evals/jobs/` rather than the summary.
+
+
+---
+
+# Seasons held-out arm — the anti-prior fix generalizes (2026-08-03)
+
+**Result: control 1/5, treatment 5/5. Fisher exact two-sided p = 0.048.**
+Pre-registered table row 2 → **keep the fix; record as validated on a held-out domain.**
+
+`seasons-axial-tilt` was authored *after* the fix and never used to tune it. The two arms are
+byte-identical except the anti-prior block in `instruction.md` and `task.toml`'s name line,
+enforced mechanically by `tools/check_arms.sh` before each run.
+
+## Calibration (jobs `21-12-45`, `21-13-05`, `21-13-20`, `21-13-38`)
+
+| Control | Treatment arm | Control arm |
+|---|---|---|
+| Oracle | **1.0** — all 7 criteria pass | **1.0** — all 7 criteria pass |
+| `NEGATIVE=1` | **0.0** — both gates pass, all 5 judge criteria fail | **0.0** — same |
+
+Both negatives cleared the deterministic gates, so they reached the judge and failed on
+content rather than on a structural technicality. The instrument discriminates in both
+directions on both arms.
+
+## Measurement (jobs `21-16-02` treatment, `21-20-22` control, `-k 5`, 0 exceptions)
+
+| | head | research | c1 conveyed | c2 established | c3 single-source | c4 contested | c5 no-contradicted |
+|---|---|---|---|---|---|---|---|
+| **Treatment** | 5/5 | 5/5 | **5/5** | **5/5** | 5/5 | 5/5 | 5/5 |
+| **Control** | 5/5 | 5/5 | **5/5** | **1/5** | 5/5 | 5/5 | 5/5 |
+
+## What the fix actually does here — one mechanism, cleanly isolated
+
+Every control failure is on **c2 alone**. `verified_claim_conveyed` passed 5/5, and c3, c4 and
+c5 passed 5/5. So the pre-fix instruction produced **0 prior-leaks and 4 responsible hedges**:
+it always relayed the corpus's counter-factual claim, and then declined to present it as
+established — downgrading a 2-doc finding to contested.
+
+That is precisely the third named rationalization the fix operationalizes: *"move a claim the
+sources agree on into Live debates because it clashes with what you expected — a documented
+2-source finding is not a debate."* The fix converts hedging into confident relaying, and
+nothing else measurably changed.
+
+Notably the control **never endorsed `doc_f`** (c5 passed 5/5). The distractor caught nobody
+in this domain, unlike in muscle.
+
+## Honest limits on this result
+
+- **p = 0.048 is the weakest cell in the validated band.** One additional control pass (2/5)
+  drops it to "no conclusion" under the pre-registered table. This is one experiment at n=5,
+  not a settled effect size.
+- **Seasons tested a narrower failure profile than muscle.** Muscle produced leaks *and*
+  hedges; seasons produced only hedges. The fix's anti-leak provisions were never exercised
+  here, so this validates one of the four rationalizations, not all four.
+- **The corpus was held out; the rubric was not.** The c2 criterion wording was written in the
+  fix's own commit and explicitly permits attribution phrasing of the form the fix produces,
+  and this corpus was authored by someone who knew the four rationalizations. A win licenses
+  "this block transfers to unseen corpora graded by this rubric" — roughly 0.75-0.80 credence
+  — and should not move credence past ~0.5 that the fix improves real-world grounding
+  discipline on ordinary questions.
+- **Single judge sample per criterion**, at default temperature, same model family as the
+  agent. Majority-vote judging would harden this.
+
+## Standing of the fix, as of today
+
+Two independent controls now support it. `muscle-fiber-types-priorrule` (0/5) showed the
+original 0/5 → 5/5 was a genuine instruction effect and not the verifier change made in the
+same commit. `seasons-axial-tilt-priorrule` (1/5 vs 5/5) shows the block transfers to a domain
+it was never tuned on. The fix stays in `SKILL.md`.

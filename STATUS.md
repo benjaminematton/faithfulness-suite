@@ -7,7 +7,10 @@ Last updated 2026-07-31. Written at the end of the build session; nothing has be
 Built and committed (`8017190`, `d64aa93`, `15f6d33`, `1bee58c`, `f4fb505`): two Harbor arms,
 the arm-identity guard, the spec, the plan, the run sheet, and a correction to `FINDINGS.md`.
 
-**Nothing has been measured.** No harbor run of any kind has executed against these files.
+**MEASURED 2026-08-03. Result: control 1/5, treatment 5/5, Fisher p = 0.048 → validated.**
+See FINDINGS.md "Seasons held-out arm". Calibration clean (oracle 1.0/1.0, negative 0.0/0.0).
+Every control failure was on c2 alone — 0 leaks, 4 hedges — so the fix's effect here is
+entirely "stop downgrading an established 2-doc finding to contested".
 
 ## Verified vs assumed — read this before trusting anything
 
