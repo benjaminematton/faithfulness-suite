@@ -180,3 +180,24 @@ HANDOFF.md, STATUS.md      # lab notes
 ## License
 
 [MIT](LICENSE)
+
+
+## Auditor (live-web faithfulness)
+
+`auditor/` grades a field brief against the agent's OWN research transcript — no answer
+key. Deterministic checks first (D1: verified citations must have been fetched; D2: shelf
+(read) marks must be true; D3 origin flags; D4 search:fetch ratio), then one batched
+JUDGE_VOTES-capable judge call for content support and origin independence. Exit 0/1/3.
+
+    python3 -m auditor.audit --brief B.md --transcript S.jsonl [--json] [--votes 3]
+
+Works on Harbor job transcripts and real `~/.claude-work` sessions alike — it is both the
+`live-web-faithfulness` verifier and a retro-auditor for production runs. Real regression
+fixtures (Aug 3 must fail, Aug 8 must pass) are local-only; see `auditor/fixtures/README.md`.
+Run `tools/sync_auditor.sh` after changing `auditor/` to update the vendored copy in the
+Harbor task.
+
+Known limitations: query strings (beyond utm_*/fbclid/gclid tracking params) compare
+verbatim in URL identity; claims-log tables need a header naming both Claim and Status;
+shelf marks pair with the first URL on a line; selection bias is out of scope (the auditor
+grades faithfulness to what was read, not what was chosen to be read).
