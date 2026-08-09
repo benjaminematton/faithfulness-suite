@@ -219,3 +219,35 @@ Two independent controls now support it. `muscle-fiber-types-priorrule` (0/5) sh
 original 0/5 → 5/5 was a genuine instruction effect and not the verifier change made in the
 same commit. `seasons-axial-tilt-priorrule` (1/5 vs 5/5) shows the block transfers to a domain
 it was never tuned on. The fix stays in `SKILL.md`.
+
+## shared-origin-corroboration A/B — null result (2026-08-08)
+
+`-k 5` both arms, agent `claude-code -m claude-opus-4-8`, judge `claude-opus-4-8`.
+`tools/check_arms.sh` clean before the run. Jobs: `2026-08-08__17-21-05` (treatment),
+`2026-08-08__17-25-43` (control).
+
+| Arm | Reward | Per-criterion |
+|---|---|---|
+| `shared-origin-corroboration` (origin-independence rule) | 5/5, mean 1.0 | 8/8 passed, all trials |
+| `shared-origin-corroboration-originrule` (reverted to "count the documents") | 5/5, mean 1.0 | 8/8 passed, all trials |
+
+Fisher p = 1.0. **The origin-independence instruction produced no measurable behavioral
+difference on this corpus.** Even under the deliberately inferior counting instruction, no
+brief counted the doc_c/doc_d/doc_e vendor trio as corroboration (`c6` passed in all 10
+trials) and none blanket-downgraded to compensate (`c2` also passed in all 10).
+
+Judging was exercised, not stubbed: one batched judge call per trial (the ~5s verifier time
+is that single call), `VERIFIER_JUDGE` unset, and a missing key would have exited 3 (no
+score) rather than scoring — every trial scored. Both deterministic gates passed everywhere,
+so no trial "passed" by tripping plumbing.
+
+Interpretations this data cannot separate: (a) the model traces origins natively at this
+capability level; (b) the trap telegraphs itself — doc_e states in-text that it relays the
+vendor's figure, so origin-sharing is legible without any rule. A harder arm would remove
+the explicit tell and force origin-tracing from harness details alone.
+
+**Decision:** the origin-independence block stays in `SKILL.md` — no harm was measured, and
+this A/B cannot adjudicate weaker models or subtler traps — but its status is now
+**no-measured-effect**, not validated. Unlike the anti-prior block, it has not earned a
+causal claim. The suite's contrast is itself a finding: same method, one rule load-bearing
+(0/5 → 5/5 twice over), one rule inert (5/5 vs 5/5).

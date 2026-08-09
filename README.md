@@ -69,7 +69,7 @@ Three further directories are **A/B control arms**, not domains. Each is byte-id
 |---|---|---|---|
 | `muscle-fiber-types-priorrule` | `muscle-fiber-types` | anti-prior (`12009f4`) | Did the instruction cause muscle's 0/5 → 5/5, or did the verifier change in the same commit? **Answered 2026-07-31: 0/5 — the instruction did.** |
 | `seasons-axial-tilt-priorrule` | `seasons-axial-tilt` | anti-prior (`12009f4`) | Does the block generalize to a domain it was not tuned on? **Answered 2026-08-03: 1/5 vs 5/5, p = 0.048 — yes, on this one domain.** |
-| `shared-origin-corroboration-originrule` | `shared-origin-corroboration` | origin-independence | Does the "corroboration means independent origins, not document count" rule change behavior, or would the agent trace origins anyway? **Unanswered — not yet measured.** |
+| `shared-origin-corroboration-originrule` | `shared-origin-corroboration` | origin-independence | Does the "corroboration means independent origins, not document count" rule change behavior, or would the agent trace origins anyway? **Answered 2026-08-08: 5/5 vs 5/5, p = 1.0 — no measured effect; the agent traces origins without the rule (see FINDINGS).** |
 
 `tools/check_arms.sh [TREATMENT CONTROL]` asserts a pair differs only on `instruction.md` and the `name` line; run it before any A/B. Defaults to the seasons pair.
 
