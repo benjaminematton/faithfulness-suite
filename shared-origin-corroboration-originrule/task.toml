@@ -1,0 +1,30 @@
+schema_version = "1.3"
+artifacts = []
+
+[task]
+name = "personal/become-expert-faithfulness-shared-origin-originrule"
+description = "Grade whether a research agent's field brief is faithful to a fixed COUNTER-FACTUAL source corpus, including origin-independence: verified claim presented and backed by 2+ INDEPENDENT origins, a 3-document same-origin claim NOT counted as corroborated, single-source claim attributed to one doc, contested pair surfaced with both sides, and no corpus-contradicted claim stated as fact."
+authors = []
+keywords = ["eval", "faithfulness", "research-agent", "llm-judge", "source-independence"]
+
+[metadata]
+
+[verifier]
+timeout_sec = 600.0
+
+[verifier.env]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+
+[agent]
+timeout_sec = 900.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 900.0
+os = "linux"
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]
+NEGATIVE = "${NEGATIVE:-0}"

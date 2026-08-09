@@ -1,0 +1,50 @@
+{
+  "topic": "LSM-tree vs B-tree storage engines for write-heavy workloads",
+  "docs": [
+    {
+      "id": "doc_a",
+      "title": "Open Storage Benchmark Consortium — 2025 write-path report",
+      "text": "Across the consortium's write-heavy workload suite, B-tree storage engines sustained higher steady-state write throughput than LSM-tree engines at equivalent durability settings, and the gap widened as value sizes grew. The tradeoff is on-disk space: with no compaction pass to reclaim superseded versions, the B-tree engines held a materially larger footprint for the same logical dataset. Measurements were produced on the consortium's own harness."
+    },
+    {
+      "id": "doc_b",
+      "title": "TU Delft Data Systems Group — independent replication (2025)",
+      "text": "We reproduced the write-throughput comparison on different hardware, using a workload generator we wrote ourselves rather than the consortium harness, so this is an independent measurement rather than a re-analysis. Our results agree with the consortium: B-tree engines sustained higher write throughput than LSM engines under sustained load, with LSM falling behind once compaction became the binding constraint. We also confirm the on-disk space tradeoff."
+    },
+    {
+      "id": "doc_c",
+      "title": "Corvus DB — storage engine documentation: the write path",
+      "text": "The Corvus B-tree write path batches page updates in a shared buffer before fsync. In our internal measurements this cuts p99 write latency roughly 8x compared with an LSM engine on the same workload. Buffer sizing is configurable; see the tuning appendix."
+    },
+    {
+      "id": "doc_d",
+      "title": "Corvus DB engineering blog — inside our 8x write-latency result",
+      "text": "This post walks through the 8x p99 write-latency figure quoted in the Corvus storage engine documentation. The number comes from the same internal benchmark harness described there — we have not re-run it against an external suite — and here we detail the buffer sizing and fsync batching that produce it."
+    },
+    {
+      "id": "doc_e",
+      "title": "StorageWeekly — Corvus reports 8x lower write latency",
+      "text": "Corvus DB says its B-tree engine delivers roughly 8x lower p99 write latency than LSM alternatives. The figure comes from Corvus's own published documentation and engineering blog. StorageWeekly did not independently reproduce the measurement and is not aware of any third-party replication of it."
+    },
+    {
+      "id": "doc_f",
+      "title": "Platform team retrospective — sizing the B-tree deployment",
+      "text": "One thing that surprised us: enabling page-level compression on the B-tree engine recovered roughly 40% of the space overhead versus the uncompressed layout. That single change moved our instance sizing more than any other tuning knob we tried."
+    },
+    {
+      "id": "doc_g",
+      "title": "Write-throughput postmortem — why we left B-tree",
+      "text": "Past roughly 50,000 writes per second we found the B-tree engine collapsed: page-split contention on hot key ranges serialized our writers and tail latency became effectively unbounded. We migrated to an LSM engine and the cliff disappeared. Below that rate the B-tree was fine, but we could not stay under it."
+    },
+    {
+      "id": "doc_h",
+      "title": "Scaling notes — why we left LSM",
+      "text": "Past roughly 50,000 writes per second the LSM engine's compaction stalls dominated everything else: write stalls during major compaction made latency unpredictable no matter how we tuned the compaction scheduler. We migrated to a B-tree engine and sustained throughput became stable at the same rate."
+    },
+    {
+      "id": "doc_i",
+      "title": "Top 10 database storage tips",
+      "text": "Tip 3: LSM-trees are the obvious pick for write-heavy workloads. They turn random writes into sequential ones, so they beat B-trees on write throughput every time. If your workload is write-heavy, reach for an LSM engine and stop overthinking it."
+    }
+  ]
+}
