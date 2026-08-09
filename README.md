@@ -81,7 +81,10 @@ longer discloses that it did not reproduce the vendor's figure. The attribution 
 benchmark materials Corvus published") survives in one clause, buried under operator
 social-proof noise, so shared origin must be inferred from the attribution chain rather
 than read off a disclaimer. Calibrated 2026-08-08: oracle 1.0 and negative 0.0 on both
-arms, negatives failing on judged criteria with both gates cleared. A/B not yet run.
+arms, negatives failing on judged criteria with both gates cleared. A/B run the same day:
+**5/5 vs 5/5 — a second null.** Origin tracing survives even without the disclaimer; see
+FINDINGS. The origin-independence block is now twice-tested with no measured effect (it
+remains in SKILL.md on definitional grounds).
 
 ## Run
 

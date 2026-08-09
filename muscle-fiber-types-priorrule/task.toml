@@ -20,6 +20,7 @@ timeout_sec = 600.0
 # the command line. Without this declaration the key never reaches the verifier container.
 [verifier.env]
 ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+JUDGE_VOTES = "${JUDGE_VOTES:-1}"
 
 [agent]
 timeout_sec = 900.0

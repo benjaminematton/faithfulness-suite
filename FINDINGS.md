@@ -251,3 +251,35 @@ this A/B cannot adjudicate weaker models or subtler traps — but its status is 
 **no-measured-effect**, not validated. Unlike the anti-prior block, it has not earned a
 causal claim. The suite's contrast is itself a finding: same method, one rule load-bearing
 (0/5 → 5/5 twice over), one rule inert (5/5 vs 5/5).
+
+## Hard shared-origin A/B — second null (2026-08-08)
+
+Same-day follow-up to the shared-origin null. `shared-origin-corroboration-hard` removes
+doc_e's replication disclaimer: attribution to Corvus survives in one buried clause under
+operator social-proof noise, so shared origin must be inferred from the attribution chain.
+Calibrated the same day (oracle 1.0 / negative 0.0, both arms, negatives failing on judged
+criteria with both gates cleared). Jobs: `2026-08-08__17-49-18` (treatment),
+`2026-08-08__17-53-50` (control).
+
+| Arm | Reward | Per-criterion |
+|---|---|---|
+| hard, with origin-independence rule | 5/5, mean 1.0 | 8/8 passed, all trials |
+| hard, rule reverted to "count the documents" | 5/5, mean 1.0 | 8/8 passed, all trials |
+
+**Second null, on the harder trap.** Even with no disclaimer and the inferior counting
+instruction, every brief traced the vendor trio to one origin (`c6` 10/10) without
+blanket-downgrading (`c2` 10/10). At this agent/model capability (claude-opus-4-8), origin
+tracing appears native: two controlled A/Bs, easy and hard traps, no measured effect.
+
+Protocol note: these runs were intended as JUDGE_VOTES=3 but ran single-sample — the env
+var was not passed through `[verifier.env]` (verifier wall-times ~5s = one judge call).
+Fixed after the fact: every task.toml now passes `JUDGE_VOTES = "${JUDGE_VOTES:-1}"`.
+Single-sample keeps these numbers comparable with all prior recorded results.
+
+**Status of the origin-independence block in `SKILL.md`:** twice tested, no measured
+effect. It stays for now on definitional grounds — the block also *defines* what
+"independent origins" means for the brief's `verified` status, so deleting it would change
+the output contract, not just remove a nudge — but it can no longer be described as
+behaviorally load-bearing, and a capability-limited model might still need it (untested).
+The suite's summary contrast sharpens: anti-prior rule, causal twice over; origin rule,
+inert twice over.
