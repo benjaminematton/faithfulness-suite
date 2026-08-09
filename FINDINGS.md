@@ -283,3 +283,23 @@ the output contract, not just remove a nudge — but it can no longer be describ
 behaviorally load-bearing, and a capability-limited model might still need it (untested).
 The suite's summary contrast sharpens: anti-prior rule, causal twice over; origin rule,
 inert twice over.
+
+## Five-domain baseline, JUDGE_VOTES=3 — partial (2026-08-08)
+
+First baseline with majority-vote judging confirmed active (verifier wall times 12–15s =
+three judge samples; single-sample runs take ~5s). `-k 5` per domain, agent
+`claude-code -m claude-opus-4-8`.
+
+| Domain | Result |
+|---|---|
+| hnsw-vs-ivf | 5/5, mean 1.0 |
+| coffee-arabica-robusta | 5/5, mean 1.0 |
+| muscle-fiber-types | 5/5, mean 1.0 |
+| seasons-axial-tilt | 5/5, mean 1.0 |
+| shared-origin-corroboration | VOID — API credit exhaustion mid-job (`2026-08-08__18-31-09`) |
+
+The fifth job is contaminated, not failed: judge calls returned 400 credit-balance errors →
+verifier exit 3, no reward (4 trials), and the single trial that recorded 0.0 failed the
+research gate with the agent itself dying mid-run. Per the exit-code contract that 0.0 is
+an agent-infra casualty and MUST NOT enter any faithfulness table. Re-run the domain after
+topping up credits to complete the baseline: 20/20 so far, 3-vote judging.
