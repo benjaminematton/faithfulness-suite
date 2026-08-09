@@ -17,6 +17,7 @@ Exit-code contract (read by test.sh):
 
 Judge: Anthropic API, pinned claude-opus-4-8 (env ANTHROPIC_API_KEY). Set
 VERIFIER_JUDGE=stub:pass / stub:fail to exercise the plumbing offline with no key.
+JUDGE_VOTES=N (odd) majority-votes N judge samples per criterion; default 1.
 Override paths for local runs via BRIEF_PATH / TRAJ_PATH / CORPUS_PATH.
 """
 
@@ -33,6 +34,7 @@ CORPUS_PATH = os.environ.get(
     "CORPUS_PATH", "/tests/corpus.json"
 )  # trusted grading copy
 JUDGE = os.environ.get("VERIFIER_JUDGE", "claude")
+JUDGE_VOTES = max(1, int(os.environ.get("JUDGE_VOTES", "1")))
 
 # Section headings the brief must contain (matched as markdown heading lines, not as
 # free-floating substrings). Each entry is the normalized heading text a line must start with.
@@ -133,6 +135,10 @@ def _judge(brief_text, corpus):
             "contested_debate_surfaced": good,
             "avoids_corpus_contradicted_claims": good,
         }
+    return _judge_vote(brief_text, corpus)
+
+
+def _judge_once(brief_text, corpus):
     import anthropic
 
     # Bounded timeout/retries so a slow API can't blow the 600s verifier budget.
@@ -151,6 +157,25 @@ def _judge(brief_text, corpus):
     missing = set(JUDGE_SCHEMA["required"]) - out.keys()
     if missing:  # malformed judge response -> infra (caught by verdict), not reward 0
         raise ValueError(f"judge response missing keys: {sorted(missing)}")
+    return out
+
+
+def _judge_vote(brief_text, corpus):
+    """JUDGE_VOTES independent samples, per-criterion majority (strict > n/2; use an
+    ODD count — on an even split a criterion resolves False, which is conservative).
+
+    Default 1 keeps every recorded number comparable with single-sample history. Any
+    failed sample is infra (exit 3 via the verdict fixture), never reward 0 — a partial
+    panel must not masquerade as a verdict."""
+    votes = [_judge_once(brief_text, corpus) for _ in range(JUDGE_VOTES)]
+    if len(votes) == 1:
+        return votes[0]
+    keys = [k for k in JUDGE_SCHEMA["required"] if k != "reason"]
+    out = {k: sum(1 for v in votes if v[k]) > len(votes) / 2 for k in keys}
+    tally = "; ".join(f"{k}={sum(1 for v in votes if v[k])}/{len(votes)}" for k in keys)
+    out["reason"] = f"majority of {len(votes)} votes [{tally}] | " + " || ".join(
+        f"v{i + 1}: {v['reason']}" for i, v in enumerate(votes)
+    )
     return out
 
 

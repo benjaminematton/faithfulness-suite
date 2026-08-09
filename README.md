@@ -73,7 +73,21 @@ Three further directories are **A/B control arms**, not domains. Each is byte-id
 
 `tools/check_arms.sh [TREATMENT CONTROL]` asserts a pair differs only on `instruction.md` and the `name` line; run it before any A/B. Defaults to the seasons pair.
 
+### Hard shared-origin pair — UNCALIBRATED, do not A/B yet
+
+`shared-origin-corroboration-hard` (+ `-originrule` control) is the follow-up the 2026-08-08
+null result called for: identical to `shared-origin-corroboration` except doc_e, which no
+longer discloses that it did not reproduce the vendor's figure. The attribution ("traces to
+benchmark materials Corvus published") survives in one clause, buried under operator
+social-proof noise, so shared origin must be inferred from the attribution chain rather
+than read off a disclaimer. Before any agent run: oracle must score 1.0 and the negative
+0.0 on BOTH arms, per the validation protocol below.
+
 ## Run
+
+Judging is single-sample by default. Set `JUDGE_VOTES=3` (odd) in the verifier env to
+majority-vote three judge samples per criterion — use it for baselines and any comparison
+you intend to keep; leave it unset when reproducing historical single-sample numbers.
 
 Single task (build → oracle/agent → judge). Faithful → reward 1:
 
@@ -84,7 +98,7 @@ Single task (build → oracle/agent → judge). Faithful → reward 1:
 ```
 
 > [!WARNING]
-> **Whole suite — read this first.** Pointing `-p` at this directory makes Harbor enumerate **every** task directory, which is now **eight**, including the three control arms carrying a known-inferior instruction. A "whole suite" number computed that way has a different denominator than the recorded 2/3 and three members designed to fail — it will read as a regression that is not one. Run the five real domains explicitly instead:
+> **Whole suite — read this first.** Pointing `-p` at this directory makes Harbor enumerate **every** task directory, which is now **ten**, including the three control arms and the uncalibrated hard pair carrying a known-inferior instruction. A "whole suite" number computed that way has a different denominator than the recorded 2/3 and three members designed to fail — it will read as a regression that is not one. Run the five real domains explicitly instead:
 
 ```bash
 for T in hnsw-vs-ivf coffee-arabica-robusta muscle-fiber-types seasons-axial-tilt \
