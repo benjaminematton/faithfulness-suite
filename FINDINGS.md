@@ -309,3 +309,48 @@ agent is at ceiling on all five planted structures. Any post-change number below
 domain is a regression against this baseline, not noise to argue about — that is what the
 25 trials bought. It also sharpens the caveat: the suite now discriminates *changes for the
 worse*; measuring further improvement needs harder tasks, not more trials.
+
+## Search-pressure A/B — F1 does not reproduce in sealed conditions (2026-08-08)
+
+`-k 5` both arms, JUDGE_VOTES=3 (confirmed active), agent `claude-code -m claude-opus-4-8`.
+Jobs: `2026-08-08__20-50-53` (treatment), `2026-08-08__20-56-32` (control). Task built from
+the mining report's F1 (docs/2026-08-09-mining-report.md): 14 docs with snippets, 6-fetch
+budget, snippet-mirage claim, deterministic read-citations gate.
+
+Headline rewards (treatment 4/5, control 2/5) are NOT the finding and must not be quoted as
+an instruction effect. The trajectories show why: **all ten trials, both arms, fetched the
+identical six documents (doc_a b c d h i) and skipped doc_g.** Identical research behavior.
+
+| Criterion | Treatment | Control |
+|---|---|---|
+| gate 3: verified citations were read | 5/5 | 5/5 |
+| mirage_not_verified | 5/5 | 5/5 |
+| verified_pair_established / contested / listicle | 5/5 each | 5/5 each |
+| single_source_flagged (doc_g, unread by all) | 4/5 | 2/5 |
+
+Findings:
+
+1. **F1 does not reproduce in a sealed, budgeted corpus.** Even with the
+   snippets-are-not-sources block reverted, every run traced the mirage to its vendor
+   origin (spending fetches on doc_c AND doc_d to do it) and refused to verify the 40%
+   figure. The block is not what prevents laundering here. Combined with the two
+   origin-rule nulls: opus-4-8 is at ceiling on every sealed-corpus manipulation this suite
+   has produced. The real-world F1 failure (Aug 3: 54 searches, 5 reads, unread citations
+   marked verified) evidently needs its real trigger — open-ended live search with no
+   budget and no curated doc list — which a sealed corpus structurally cannot supply.
+2. **The reward gap is judge variance on one flawed criterion.** All failures in both arms
+   are single_source_flagged, which requires the doc_g claim surfaced-and-flagged and
+   scores omission as failure. Every agent triaged doc_g out of the budget in favor of
+   verifying the mirage's origin — defensible research strategy the criterion punishes.
+   With identical fetches, the 4/5 vs 2/5 split (Fisher p ≈ 0.52) is phrasing-of-unread-
+   material variance, not behavior. The criterion conflates coverage triage with
+   unfaithfulness; treat it as unscored until reworded (accept explicit unread/snippet-
+   level flagging as TRUE) and recalibrated. With it excluded, both arms are 5/5.
+3. **What this buys the skill:** nothing to change in SKILL.md from this result — and that
+   is the result. The sealed-corpus family is mined out at this capability level. The
+   binding next probe for F1 is live-web: real searches, no fetch budget, no curated
+   corpus, grade the brief's verified claims against what the trajectory actually read.
+
+Suite status after tonight: anti-prior rule causal (twice); origin rule inert (twice);
+snippet block untestable in sealed conditions (F1 needs live-web); one criterion flagged
+flawed; five-domain baseline 25/25 at 3-vote judging.

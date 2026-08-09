@@ -99,7 +99,12 @@ trajectory's fetch log. The control arm reverts only the snippets-are-not-source
 landing-audit block. Calibrated 2026-08-08: oracle 1.0 and negative 0.0 on both arms, negatives clearing all
 three gates and failing on all five judged criteria — the rubric, not the plumbing, does the
 work (the judge failed the mirage even though the negative had READ doc_c). Gate 3's negative
-coverage is exercised offline by `tests/smoke.sh`. A/B not yet run.
+coverage is exercised offline by `tests/smoke.sh`. A/B run 2026-08-08: **F1 does not
+reproduce in sealed conditions** — both arms fetched the identical six docs, passed gate 3
+and the mirage criterion 5/5, and the only failures were on `single_source_flagged`, a
+criterion FINDINGS now flags as flawed (it scores honest budget triage as unfaithfulness;
+treat it as unscored until reworded and recalibrated). Do not quote this pair's reward
+means as an instruction effect.
 
 ## Run
 
