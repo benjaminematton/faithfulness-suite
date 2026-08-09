@@ -354,3 +354,30 @@ Findings:
 Suite status after tonight: anti-prior rule causal (twice); origin rule inert (twice);
 snippet block untestable in sealed conditions (F1 needs live-web); one criterion flagged
 flawed; five-domain baseline 25/25 at 3-vote judging.
+
+## Live-web auditor: built, validated on real fixtures (2026-08-09)
+
+New instrument (`auditor/`, spec + plan in docs/): grades a field brief against the agent's
+OWN research transcript — no answer key. Deterministic checks (D1 cited-but-unread under
+Verified claims; D2 shelf honesty; D3 origin flags; D4 search:fetch ratio) then one
+batched JUDGE_VOTES judge call for content support + origin independence. Exit 0/1/3.
+Built via subagent-driven TDD; survived five adversarial review rounds whose recurring
+theme was making it FAIL CLOSED — unparseable briefs, decorated status cells, stray
+tables, claimless-but-lying briefs all resolve to findings or "unauditable," never clean.
+
+Validation (local fixtures, personal transcripts, not committed — hashes in
+auditor/fixtures/README.md):
+
+| Fixture | Ground truth (mining report) | Auditor verdict |
+|---|---|---|
+| aug03 accelerator-cohort brief + transcript | known bad: verified claims cite unread sources | exit 1 — 3x cited-but-unread + 1x no-citation, one claim legitimately earns verified |
+| aug08 observability brief + transcript | known good | exit 0 clean (19 claims audited) |
+
+Live judge path executed for the first time (3-vote panels): no API issues. One
+calibration lesson from real data: briefs honestly label claims "search-level only" — now
+a recognized status rather than a D0 unauditable row.
+
+This closes the loop the search-pressure null opened: F1 is now measurable where it
+actually occurs. Next: `live-web-faithfulness` Harbor smoke (-k 1, confirm the container
+transcript path), then a k=5 live-web baseline; and the auditor doubles as a retro-tool on
+any real become-expert session.
