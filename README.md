@@ -86,6 +86,20 @@ arms, negatives failing on judged criteria with both gates cleared. A/B run the 
 FINDINGS. The origin-independence block is now twice-tested with no measured effect (it
 remains in SKILL.md on definitional grounds).
 
+### Search-pressure pair — UNCALIBRATED, do not A/B yet
+
+`search-pressure-corroboration` (+ `-snippetless` control) targets failure **F1 from the
+real-run mining report** (`docs/2026-08-09-mining-report.md`): verified-status laundering
+under search pressure. Mechanics differ from every prior task: 14 documents visible in
+search with rich snippets, a **6-doc fetch budget** enforced by the CLI, and a snippet
+mirage — the "40% cooling-energy" figure looks corroborated in search results but its one
+independent full text (doc_c) measured 9-14% and refutes it. A new deterministic gate makes
+the F1 rule mechanical: every doc_id cited under Verified claims must appear in the
+trajectory's fetch log. The control arm reverts only the snippets-are-not-sources /
+landing-audit block. Before any agent run: oracle 1.0 and negative 0.0 on both arms — the
+negative launders IN-BUDGET (clears all three gates, fails on judged criteria), and gate 3's
+negative coverage is exercised offline by `tests/smoke.sh`.
+
 ## Run
 
 Judging is single-sample by default. Set `JUDGE_VOTES=3` (odd) in the verifier env to
@@ -101,7 +115,7 @@ Single task (build → oracle/agent → judge). Faithful → reward 1:
 ```
 
 > [!WARNING]
-> **Whole suite — read this first.** Pointing `-p` at this directory makes Harbor enumerate **every** task directory, which is now **ten**, including the three control arms and the uncalibrated hard pair carrying a known-inferior instruction. A "whole suite" number computed that way has a different denominator than the recorded 2/3 and three members designed to fail — it will read as a regression that is not one. Run the five real domains explicitly instead:
+> **Whole suite — read this first.** Pointing `-p` at this directory makes Harbor enumerate **every** task directory, which is now **twelve**, including four control arms carrying a known-inferior instruction. A "whole suite" number computed that way has a different denominator than the recorded 2/3 and three members designed to fail — it will read as a regression that is not one. Run the five real domains explicitly instead:
 
 ```bash
 for T in hnsw-vs-ivf coffee-arabica-robusta muscle-fiber-types seasons-axial-tilt \

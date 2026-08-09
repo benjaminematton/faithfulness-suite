@@ -1,0 +1,31 @@
+schema_version = "1.3"
+artifacts = []
+
+[task]
+name = "personal/become-expert-faithfulness-search-pressure"
+description = "Grade whether a research agent stays faithful under SEARCH PRESSURE: 14 docs visible as rich snippets, a 6-doc fetch budget, and a snippet-mirage claim that looks corroborated in search results but is refuted by its one independent full text. Deterministic gate: every doc cited under Verified claims must actually have been fetched (search-level citations = laundering = fail). Reproduces failure F1 from the 2026-08-09 real-run mining report."
+authors = []
+keywords = ["eval", "faithfulness", "research-agent", "llm-judge", "search-pressure", "snippet-laundering"]
+
+[metadata]
+
+[verifier]
+timeout_sec = 600.0
+
+[verifier.env]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+JUDGE_VOTES = "${JUDGE_VOTES:-1}"
+
+[agent]
+timeout_sec = 900.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 900.0
+os = "linux"
+mcp_servers = []
+
+[environment.env]
+
+[solution.env]
+NEGATIVE = "${NEGATIVE:-0}"
