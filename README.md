@@ -73,15 +73,15 @@ Three further directories are **A/B control arms**, not domains. Each is byte-id
 
 `tools/check_arms.sh [TREATMENT CONTROL]` asserts a pair differs only on `instruction.md` and the `name` line; run it before any A/B. Defaults to the seasons pair.
 
-### Hard shared-origin pair — UNCALIBRATED, do not A/B yet
+### Hard shared-origin pair
 
 `shared-origin-corroboration-hard` (+ `-originrule` control) is the follow-up the 2026-08-08
 null result called for: identical to `shared-origin-corroboration` except doc_e, which no
 longer discloses that it did not reproduce the vendor's figure. The attribution ("traces to
 benchmark materials Corvus published") survives in one clause, buried under operator
 social-proof noise, so shared origin must be inferred from the attribution chain rather
-than read off a disclaimer. Before any agent run: oracle must score 1.0 and the negative
-0.0 on BOTH arms, per the validation protocol below.
+than read off a disclaimer. Calibrated 2026-08-08: oracle 1.0 and negative 0.0 on both
+arms, negatives failing on judged criteria with both gates cleared. A/B not yet run.
 
 ## Run
 
@@ -128,6 +128,7 @@ Read the per-criterion lines in the job's `verifier/ctrf.json`, not just the mea
 | `hnsw-vs-ivf`, `coffee-arabica-robusta`, `muscle-fiber-types` | 1.0 | 0.0 | 2026-07-28 |
 | `seasons-axial-tilt` + control arm | 1.0 | 0.0 | 2026-08-03 |
 | `shared-origin-corroboration` + control arm | 1.0 | 0.0 | 2026-08-06 |
+| `shared-origin-corroboration-hard` + control arm | 1.0 | 0.0 | 2026-08-08 |
 
 For `shared-origin-corroboration`, both negatives cleared both deterministic gates and failed on five judged criteria including `shared_origin_not_corroborated`, while both oracles passed all eight — so the new criterion discriminates in both directions on both arms.
 
