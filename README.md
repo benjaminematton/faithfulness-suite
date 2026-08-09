@@ -86,7 +86,7 @@ arms, negatives failing on judged criteria with both gates cleared. A/B run the 
 FINDINGS. The origin-independence block is now twice-tested with no measured effect (it
 remains in SKILL.md on definitional grounds).
 
-### Search-pressure pair — UNCALIBRATED, do not A/B yet
+### Search-pressure pair
 
 `search-pressure-corroboration` (+ `-snippetless` control) targets failure **F1 from the
 real-run mining report** (`docs/2026-08-09-mining-report.md`): verified-status laundering
@@ -96,9 +96,10 @@ mirage — the "40% cooling-energy" figure looks corroborated in search results 
 independent full text (doc_c) measured 9-14% and refutes it. A new deterministic gate makes
 the F1 rule mechanical: every doc_id cited under Verified claims must appear in the
 trajectory's fetch log. The control arm reverts only the snippets-are-not-sources /
-landing-audit block. Before any agent run: oracle 1.0 and negative 0.0 on both arms — the
-negative launders IN-BUDGET (clears all three gates, fails on judged criteria), and gate 3's
-negative coverage is exercised offline by `tests/smoke.sh`.
+landing-audit block. Calibrated 2026-08-08: oracle 1.0 and negative 0.0 on both arms, negatives clearing all
+three gates and failing on all five judged criteria — the rubric, not the plumbing, does the
+work (the judge failed the mirage even though the negative had READ doc_c). Gate 3's negative
+coverage is exercised offline by `tests/smoke.sh`. A/B not yet run.
 
 ## Run
 
@@ -148,6 +149,7 @@ Read the per-criterion lines in the job's `verifier/ctrf.json`, not just the mea
 | `seasons-axial-tilt` + control arm | 1.0 | 0.0 | 2026-08-03 |
 | `shared-origin-corroboration` + control arm | 1.0 | 0.0 | 2026-08-06 |
 | `shared-origin-corroboration-hard` + control arm | 1.0 | 0.0 | 2026-08-08 |
+| `search-pressure-corroboration` + control arm | 1.0 | 0.0 | 2026-08-08 |
 
 For `shared-origin-corroboration`, both negatives cleared both deterministic gates and failed on five judged criteria including `shared_origin_not_corroborated`, while both oracles passed all eight — so the new criterion discriminates in both directions on both arms.
 
