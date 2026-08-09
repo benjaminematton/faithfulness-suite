@@ -296,10 +296,16 @@ three judge samples; single-sample runs take ~5s). `-k 5` per domain, agent
 | coffee-arabica-robusta | 5/5, mean 1.0 |
 | muscle-fiber-types | 5/5, mean 1.0 |
 | seasons-axial-tilt | 5/5, mean 1.0 |
-| shared-origin-corroboration | VOID — API credit exhaustion mid-job (`2026-08-08__18-31-09`) |
+| shared-origin-corroboration | 5/5, mean 1.0 (re-run `2026-08-08__20-02-05` after credit top-up) |
 
-The fifth job is contaminated, not failed: judge calls returned 400 credit-balance errors →
-verifier exit 3, no reward (4 trials), and the single trial that recorded 0.0 failed the
-research gate with the agent itself dying mid-run. Per the exit-code contract that 0.0 is
-an agent-infra casualty and MUST NOT enter any faithfulness table. Re-run the domain after
-topping up credits to complete the baseline: 20/20 so far, 3-vote judging.
+**Baseline complete: 25/25 across five domains, 3-vote judging, verifier times 14–16s
+confirming the panel ran.** The original fifth job (`2026-08-08__18-31-09`) is VOID —
+credit exhaustion: judge 400s → verifier exit 3, no reward (4 trials), and its single
+recorded 0.0 failed the research gate with the agent dying mid-run; an agent-infra
+casualty, excluded per the exit-code contract.
+
+This is the reference point for every future skill change: with the current SKILL.md, the
+agent is at ceiling on all five planted structures. Any post-change number below 5/5 on a
+domain is a regression against this baseline, not noise to argue about — that is what the
+25 trials bought. It also sharpens the caveat: the suite now discriminates *changes for the
+worse*; measuring further improvement needs harder tasks, not more trials.

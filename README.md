@@ -112,7 +112,9 @@ for T in hnsw-vs-ivf coffee-arabica-robusta muscle-fiber-types seasons-axial-til
 done
 ```
 
-Note that the recorded **2/3** baseline predates `seasons-axial-tilt` and `shared-origin-corroboration`, so a five-domain mean is not comparable to it either. Compare per-task, not as a suite mean, until a full five-domain baseline exists.
+**Current baseline (2026-08-08, `JUDGE_VOTES=3`, `-k 5`): 25/25 across the five domains.**
+The historical 2/3 number predates two domains and majority voting; compare new results
+against the 25/25 baseline per-task, not against suite means from before it.
 
 The judge key comes from `~/evals/.anthropic.env` via each task's `[verifier.env]` `ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"` passthrough.
 
