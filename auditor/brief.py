@@ -138,10 +138,24 @@ def parse_brief(md: str) -> Brief:
             b.dropped_rows += 1
 
     # Pass 2: status-by-section bullets (only if no claims table was seen)
+    #
+    # A top-level bullet (indent 0) starts a claim; every subsequent line is
+    # absorbed into that SAME claim's text until the next top-level bullet, a
+    # heading (any "#" line, any level), a horizontal rule, or end of input.
+    # Absorbed lines include indented continuation prose and indented nested
+    # bullets — their text and URLs attach to the parent claim rather than
+    # becoming claims of their own — plus blank lines (a blank line does not
+    # end the claim; only the terminators above do). This lets multi-line
+    # bullets whose citations sit on a continuation/nested line still surface
+    # their cited_urls instead of coming back "unsupported (no citation)".
     if not saw_claims_table:
         current = None
-        for line in lines:
+        n = len(lines)
+        i = 0
+        while i < n:
+            line = lines[i]
             if _HRULE.match(line):
+                i += 1
                 continue  # horizontal rules are never claims (checked before bullets)
             stripped = line.strip()
             if stripped.startswith("#"):
@@ -150,11 +164,24 @@ def parse_brief(md: str) -> Brief:
                     h = _clean_heading(line)
                     current = next((s for k, s in _SECTION_STATUS if h.startswith(k)), None)
                 # level >= 3 sub-headings do not reset current section status
+                i += 1
                 continue
             if current and _TOP_BULLET.match(line):
-                text = re.sub(r"^[-*]\s?|^\d+[.)]\s", "", line)
+                first = re.sub(r"^[-*]\s?|^\d+[.)]\s", "", line)
+                absorbed = [first]
+                j = i + 1
+                while j < n:
+                    nxt = lines[j]
+                    if _HRULE.match(nxt) or nxt.strip().startswith("#") or _TOP_BULLET.match(nxt):
+                        break
+                    absorbed.append(nxt)
+                    j += 1
+                text = "\n".join(absorbed)
                 if sum(ch.isalpha() for ch in text) >= 3:
                     b.claims.append(_claim_from_text(text, current))
+                i = j
+                continue
+            i += 1
 
     # Pass 3: source shelf marks (works in both shapes)
     in_shelf = False

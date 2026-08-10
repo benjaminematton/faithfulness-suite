@@ -381,3 +381,40 @@ This closes the loop the search-pressure null opened: F1 is now measurable where
 actually occurs. Next: `live-web-faithfulness` Harbor smoke (-k 1, confirm the container
 transcript path), then a k=5 live-web baseline; and the auditor doubles as a retro-tool on
 any real become-expert session.
+
+## First live-web baseline: the auditor catches F1 in production (2026-08-09)
+
+Subscription-side baseline (headless become-expert runs, real web, current SKILL.md;
+sessions in ~/.claude-personal). Three auditable runs; deterministic checks only (no judge
+needed for the verdicts below):
+
+| Topic | Verdict | Detail |
+|---|---|---|
+| adaptive retrieval for RAG | clean | 15 claims, ratio 0.45, one D3 origin flag |
+| accelerator data practices | **FINDINGS** | D1 + D2 + D3, ratio 1.15 |
+| observability batch pipelines | unauditable (exit 3) | brief format defeats parser — gap logged below |
+
+**The catch.** In the accelerator run the agent attempted to fetch Kauffman's measurement
+brief (PDF); the fetch FAILED ("maxContentLength 10485760 exceeded") — transcript-provable.
+The brief then (a) cited that URL as support for the verified claim "revenue, FTEs, and new
+outside investment are the harmonized core outcome indicators" (D1: cited-but-unread) and
+(b) marked the same URL **(read)** on the source shelf (D2: false read-mark), despite the
+current skill's landing checklist requiring exactly this audit. Mechanism, pinned: **a
+failed fetch of a wanted source gets promoted to "read" from snippet memory.** This is the
+real-world F1 trigger the sealed corpora structurally could not express (their fetches
+never fail) — explaining the sealed nulls and the Aug 3 failure in one stroke.
+
+Implications:
+1. The read/search-level + landing-checklist block reduces but does not eliminate F1; the
+   binding trigger is FETCH FAILURE. Candidate fix for SKILL.md: "A failed or truncated
+   fetch is search-level, permanently — never cite it as support, never mark it (read); if
+   a load-bearing source cannot be fetched, name that in Coverage edges." Testable by
+   re-running this topic and auditing (~$0 deterministic).
+2. The auditor works as production monitoring: caught a live failure in its first real
+   baseline, deterministically, at zero judge cost.
+3. Parser gap: one real brief format still unauditable (exit 3 — correct fail-closed
+   behavior, but coverage lost); to fix in a future auditor pass.
+
+Ops note, recorded for honesty: these "subscription" runs billed the API (~$5; auth
+precedence issue with nested claude invocations) — the data is real regardless and the
+catch was worth the spend. The audit itself cost $0 (deterministic).

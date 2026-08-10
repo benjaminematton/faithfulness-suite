@@ -116,7 +116,7 @@ def test_unrecognized_status_row_counts_as_dropped():
     assert b.dropped_rows == 1
 
 
-def test_nested_bullet_is_skipped():
+def test_nested_bullet_absorbed_into_parent_not_separate_claim():
     md = """# B
 ## Verified claims
 - Top-level claim here (doc_a).
@@ -125,6 +125,7 @@ def test_nested_bullet_is_skipped():
     b = parse_brief(md)
     assert len(b.claims) == 1
     assert "Top-level" in b.claims[0].text
+    assert "Nested detail" in b.claims[0].text
 
 
 def test_horizontal_rule_produces_no_claim():
@@ -301,3 +302,34 @@ def test_search_level_status_recognized():
     b = parse_brief(md)
     assert len(b.claims) == 1 and b.claims[0].status == "search-level"
     assert b.dropped_rows == 0
+
+
+def test_multiline_bullet_absorbs_continuation_citations():
+    md = """# B
+## Verified claims
+- **OTel is the standard.** Used by Elastic
+  and OneUptime.
+  ([Elastic](https://elastic.co/blog/x),
+  [OneUptime](https://oneuptime.com/blog/y))
+- Second claim ([z](https://z.example.com/p)).
+## Single-source / uncertain
+- One source thing ([s](https://s.example.org/q)).
+"""
+    b = parse_brief(md)
+    ver = [c for c in b.claims if c.status == "verified"]
+    assert len(ver) == 2
+    assert set(ver[0].cited_urls) == {"elastic.co/blog/x", "oneuptime.com/blog/y"}
+    assert ver[1].cited_urls == ["z.example.com/p"]
+
+
+def test_nested_bullet_urls_attach_to_parent_not_separate_claim():
+    md = """# B
+## Verified claims
+- Parent claim, two ways:
+  - *first way* ([a](https://a.example.com/1))
+  - *second way* ([b](https://b.example.org/2))
+"""
+    b = parse_brief(md)
+    ver = [c for c in b.claims if c.status == "verified"]
+    assert len(ver) == 1
+    assert set(ver[0].cited_urls) == {"a.example.com/1", "b.example.org/2"}
