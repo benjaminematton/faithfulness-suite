@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 
-from .brief import parse_brief
+from .brief import parse_brief, resolve_citations
 from .checks import Finding, run_checks
 from .judge import judge_claims
 from .report import to_json, to_markdown
@@ -27,6 +27,7 @@ def main(argv=None):
         transcript = parse_transcript(args.transcript)
         brief_text = open(args.brief).read()
         brief = parse_brief(brief_text)
+        resolve_citations(brief)
     except Exception as e:
         print(f"INFRA: cannot load inputs: {type(e).__name__}: {e}", file=sys.stderr)
         return 3

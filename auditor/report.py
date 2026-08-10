@@ -24,11 +24,15 @@ def to_json(brief, check_result, verdicts_by_claim, verdict_word):
     for c in brief.claims:
         d1 = any(f.check == "D1" and f.claim == c.text for f in check_result.findings)
         v = verdicts_by_claim.get(id(c))
+        reason = (v or {}).get("reason", "")
+        if getattr(c, "resolved_via_shelf", False):
+            note = "[citations resolved via source shelf]"
+            reason = f"{reason} {note}".strip() if reason else note
         claims.append({
             "claim": c.text, "status_claimed": c.status,
             "status_earned": earn_status(c, d1, v),
             "cited": c.cited_urls,
-            "reason": (v or {}).get("reason", ""),
+            "reason": reason,
         })
     return {
         "verdict": verdict_word,

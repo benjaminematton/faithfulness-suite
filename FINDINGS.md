@@ -451,3 +451,25 @@ tools/audit_latest.sh took its template literally (non-trailing X's), killing ev
 after the first with a bogus infra error. Fixed with trailing-X template; committed with
 this entry. Also corrected: SKILL.md checklist preamble said "five" while listing six;
 ~/.claude's deployed copy was a stale July 28 version until this deploy.
+
+## D1 blindness closed: shelf resolution + parser fixes (2026-08-10)
+
+Three auditor changes, each validated against the real accelerator re-test brief:
+
+1. **Name-citation resolution** — claims citing sources by name ("GALI *Does Acceleration
+   Work?* pp.9-10") now resolve against source-shelf titles (conservative token-overlap:
+   >=2 shared distinctive tokens AND >=half the title's tokens). Resolved citations flow
+   into D1 exactly like URLs.
+2. **Resolver reads full claim text** — the 300-char display truncation was hiding
+   citations from the matcher; stopword list shrunk to pure function words ("does"/"work"
+   were swallowing title words).
+3. **Qualified shelf marks parse** — "(read, pp.4-11)", "(read, abstract only)" etc. now
+   register; previously exactly the load-bearing sources fell off the shelf.
+
+Real-brief regression: the accelerator re-test went from 4 spurious no-citation downgrades
+and a 10-entry shelf to **clean — 21 claims, 14 shelf entries, 13 resolved by name, all
+five verified claims tracing to fetched sources via D1**. The failed-fetch rule's "holds"
+verdict now rests on deterministic evidence end to end. Suite: 71 tests green.
+
+Still queued: abstract-read counting toward verification (skill rule candidate);
+truncated-fetch detection (instruction-only); claude.ai account-skill sync (manual).

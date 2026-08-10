@@ -1,5 +1,5 @@
 # auditor/tests/test_brief.py
-from auditor.brief import parse_brief
+from auditor.brief import parse_brief, resolve_citations
 
 TABLE_BRIEF = """# Field brief: X
 ## Key claims log
@@ -33,9 +33,16 @@ def test_table_brief_claims_and_statuses():
 
 def test_shelf_marks_parsed():
     b = parse_brief(TABLE_BRIEF)
-    marks = dict(b.shelf)
+    marks = {url: mark for url, mark, _title in b.shelf}
     assert marks["gener8tor.com/gbeta"] == "read"
     assert marks["journals.uchicago.edu/doi/full/10.1086/684985"] == "search-level"
+
+
+def test_shelf_entries_carry_titles():
+    b = parse_brief(TABLE_BRIEF)
+    titles = {url: title for url, _mark, title in b.shelf}
+    assert titles["gener8tor.com/gbeta"] == "g"
+    assert titles["journals.uchicago.edu/doi/full/10.1086/684985"] == "h"
 
 
 def test_section_brief_maps_section_to_status():
@@ -333,3 +340,71 @@ def test_nested_bullet_urls_attach_to_parent_not_separate_claim():
     ver = [c for c in b.claims if c.status == "verified"]
     assert len(ver) == 1
     assert set(ver[0].cited_urls) == {"a.example.com/1", "b.example.org/2"}
+
+
+NAME_CITED_BRIEF = """# B
+## Verified claims
+- Core outcome indicators are harmonized, per GALI Acceleration Report and Kauffman Measurement Brief.
+- Something entirely unrelated to any source.
+## Source shelf
+- [GALI Acceleration Report](https://galidata.org/r1) — **(read)**
+- [Kauffman Measurement Brief](https://kauffman.org/b2) — **(read)**
+"""
+
+
+def test_name_cited_claim_resolves_via_shelf():
+    b = parse_brief(NAME_CITED_BRIEF)
+    resolve_citations(b)
+    named = next(c for c in b.claims if c.text.startswith("Core outcome"))
+    assert set(named.cited_urls) == {"galidata.org/r1", "kauffman.org/b2"}
+    assert named.resolved_via_shelf is True
+
+
+def test_non_matching_claim_stays_unresolved():
+    b = parse_brief(NAME_CITED_BRIEF)
+    resolve_citations(b)
+    unrelated = next(c for c in b.claims if c.text.startswith("Something entirely"))
+    assert unrelated.cited_urls == []
+    assert unrelated.resolved_via_shelf is False
+
+
+def test_resolve_citations_leaves_already_cited_claims_untouched():
+    b = parse_brief(TABLE_BRIEF)
+    before = [list(c.cited_urls) for c in b.claims]
+    resolve_citations(b)
+    after = [list(c.cited_urls) for c in b.claims]
+    assert before == after
+    assert all(not c.resolved_via_shelf for c in b.claims)
+
+
+def test_resolution_uses_full_text_beyond_display_truncation():
+    filler = "word " * 70  # pushes citation past the 300-char display cap
+    md = f"""# B
+## Verified claims
+- Claim body {filler} per GALI Does Acceleration Work and the Hochberg Seed Accelerator Model report.
+## Sources
+- [GALI — Does Acceleration Work? Five Years of Evidence](https://galidata.org/daw) — **(read)**
+- [Hochberg — Accelerating Entrepreneurs and Ecosystems: The Seed Accelerator Model](https://example.edu/ham) — **(read)**
+- [GALI — A Rocket or a Runway? Venture Growth during Acceleration](https://galidata.org/rocket) — **(read)**
+"""
+    from auditor.brief import parse_brief, resolve_citations
+    b = parse_brief(md)
+    resolve_citations(b)
+    ver = [c for c in b.claims if c.status == "verified"][0]
+    assert "galidata.org/daw" in ver.cited_urls
+    assert "example.edu/ham" in ver.cited_urls
+    assert "galidata.org/rocket" not in ver.cited_urls  # named neither Rocket nor Runway
+
+
+def test_qualified_shelf_marks_parse():
+    md = """# B
+## Sources
+- [GALI — Does Acceleration Work?](https://galidata.org/daw.pdf) — **(read, pp.4–11)** canonical synthesis
+- [Seitz meta-analysis](https://repec.org/seitz) — **(read, abstract only)** full text unreachable
+- [ANDE hub](https://andeglobal.org/hub) — (search-level, seen in results)
+"""
+    b = parse_brief(md)
+    marks = {url: mark for url, mark, _t in b.shelf}
+    assert marks["galidata.org/daw.pdf"] == "read"
+    assert marks["repec.org/seitz"] == "read"
+    assert marks["andeglobal.org/hub"] == "search-level"

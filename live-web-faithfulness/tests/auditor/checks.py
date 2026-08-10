@@ -57,7 +57,7 @@ def run_checks(brief, transcript) -> CheckResult:
                         f"cited page(s) contain relay language: {', '.join(relayers)}"))
 
     # D2: shelf honesty.
-    for url, mark in brief.shelf:
+    for url, mark, _title in brief.shelf:
         if mark == "read" and url not in fetched:
             res.findings.append(Finding(
                 "D2", "fail", url, f"shelf marks (read) but transcript never fetched {url}"))

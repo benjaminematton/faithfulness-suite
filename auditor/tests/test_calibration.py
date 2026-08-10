@@ -206,6 +206,64 @@ STATUS_TABLE_WITHOUT_CLAIM_HEADER_PLUS_SECTION = """# B
 """
 
 
+NAME_CITED_VERIFIED = """# B
+## Verified claims
+- Core outcome indicators are harmonized, per GALI Acceleration Report and Kauffman Measurement Brief.
+## Source shelf
+- [GALI Acceleration Report](https://galidata.org/r1) — **(read)**
+- [Kauffman Measurement Brief](https://kauffman.org/b2) — **(read)**
+"""
+
+NAME_CITED_TRANSCRIPT = [
+    {"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": "t1", "name": "WebFetch",
+         "input": {"url": "https://kauffman.org/b2"}}]}},
+    {"type": "user", "message": {"content": [
+        {"type": "tool_result", "tool_use_id": "t1", "content": "Kauffman methodology"}]}},
+]
+
+NAME_CITED_TRANSCRIPT_BOTH_FETCHED = NAME_CITED_TRANSCRIPT + [
+    {"type": "assistant", "message": {"content": [
+        {"type": "tool_use", "id": "t2", "name": "WebFetch",
+         "input": {"url": "https://galidata.org/r1"}}]}},
+    {"type": "user", "message": {"content": [
+        {"type": "tool_result", "tool_use_id": "t2", "content": "GALI acceleration data"}]}},
+]
+
+
+def _run_with_transcript(tmp_path, brief, transcript, votes=None):
+    b = tmp_path / "b.md"; b.write_text(brief)
+    t = tmp_path / "t.jsonl"
+    t.write_text("\n".join(json.dumps(r) for r in transcript))
+    env = dict(os.environ, VERIFIER_JUDGE="stub:pass", PYTHONPATH=os.getcwd())
+    return subprocess.run([sys.executable, "-m", "auditor.audit", "--brief", str(b),
+                          "--transcript", str(t), "--json"],
+                         capture_output=True, text=True, env=env)
+
+
+def test_name_cited_claim_with_unfetched_resolved_url_trips_d1(tmp_path):
+    # The claim cites GALI and Kauffman by NAME only (no inline URLs). Shelf
+    # resolution attaches both shelf URLs to the claim's cited_urls. The GALI
+    # URL was never fetched in this transcript, so D1 must fire -- the check
+    # coming back to life instead of being blind to a claim with no inline URLs.
+    p = _run_with_transcript(tmp_path, NAME_CITED_VERIFIED, NAME_CITED_TRANSCRIPT)
+    assert p.returncode == 1, p.stdout + p.stderr
+    out = json.loads(p.stdout)
+    d1 = [f for f in out["findings"] if f["check"] == "D1" and f["severity"] == "fail"]
+    assert d1
+    claim = out["claims"][0]
+    assert claim["status_earned"] == "unsupported (cited-but-unread)"
+    assert "citations resolved via source shelf" in claim["reason"]
+
+
+def test_name_cited_claim_with_all_resolved_urls_fetched_is_clean(tmp_path):
+    p = _run_with_transcript(tmp_path, NAME_CITED_VERIFIED, NAME_CITED_TRANSCRIPT_BOTH_FETCHED)
+    assert p.returncode == 0, p.stdout + p.stderr
+    out = json.loads(p.stdout)
+    d1 = [f for f in out["findings"] if f["check"] == "D1"]
+    assert not d1
+
+
 def test_status_table_without_claim_header_ignored_section_claims_audited(tmp_path):
     # Y2(d): a "Source | Status | Notes" table has "status" wording but no
     # "claim" wording in its header -- it's an ordinary stray table (ignored,

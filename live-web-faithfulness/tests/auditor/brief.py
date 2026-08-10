@@ -13,8 +13,9 @@ from .urlnorm import normalize_url
 
 STATUSES = ("verified", "single-source", "contested", "inference", "prior-knowledge", "search-level")
 _URL = re.compile(r"\((https?://[^)\s]+)\)")
+_LINK = re.compile(r"\[([^\]]*)\]\((https?://[^)\s]+)\)")
 _DOC = re.compile(r"\bdoc_[a-z]\b")
-_SHELF_MARK = re.compile(r"\((read|search-level)\)", re.I)
+_SHELF_MARK = re.compile(r"\((read|search-level)\b[^)]*\)", re.I)
 _SEP_CELL = re.compile(r"^:?-+:?$")
 _HRULE = re.compile(r"^\s*[-*_]{2,}\s*$")
 _TOP_BULLET = re.compile(r"^(?:[-*]\s|\d+[.)]\s)")
@@ -24,6 +25,17 @@ _STATUS_RE = {
 _CLAIM_WORD = re.compile(r"\bclaims?\b")
 _STATUS_WORD = re.compile(r"\bstatus\b")
 _SRC_WORD = re.compile(r"\b(source|sources|citation|citations|link|links|url|urls)\b")
+
+_WORD = re.compile(r"[a-z0-9]+")
+_STOPWORDS = {
+    "the", "and", "for", "with", "from", "a", "an", "of", "in", "on", "to",
+    "at", "by", "or", "vs",
+}
+
+
+def _tokenize(text):
+    """Lowercase alphanumeric words >=3 chars, minus a small stopword list."""
+    return {w for w in _WORD.findall(text.lower()) if len(w) >= 3 and w not in _STOPWORDS}
 
 _SECTION_STATUS = [
     ("verified claims", "verified"),
@@ -38,12 +50,14 @@ class Claim:
     status: str
     cited_urls: list = field(default_factory=list)
     doc_refs: list = field(default_factory=list)
+    resolved_via_shelf: bool = False
+    full_text: str = ""
 
 
 @dataclass
 class Brief:
     claims: list = field(default_factory=list)
-    shelf: list = field(default_factory=list)  # (normalized url, mark)
+    shelf: list = field(default_factory=list)  # (normalized url, mark, title)
     dropped_rows: int = 0
 
 
@@ -72,11 +86,13 @@ def _is_separator_row(cells):
 
 
 def _claim_from_text(text, status):
+    cleaned = re.sub(r"\s+", " ", text).strip()
     return Claim(
-        text=re.sub(r"\s+", " ", text).strip()[:300],
+        text=cleaned[:300],
         status=status,
         cited_urls=[normalize_url(u) for u in _URL.findall(text)],
         doc_refs=sorted(set(_DOC.findall(text))),
+        full_text=cleaned,
     )
 
 
@@ -189,8 +205,44 @@ def parse_brief(md: str) -> Brief:
         if line.strip().startswith("#"):
             in_shelf = _clean_heading(line).startswith(("source shelf", "sources"))
         elif in_shelf:
-            urls = _URL.findall(line)
             mark = _SHELF_MARK.search(line)
-            if urls and mark:
-                b.shelf.append((normalize_url(urls[0]), mark.group(1).lower()))
+            if not mark:
+                continue
+            links = _LINK.findall(line)
+            if links:
+                title, url = links[0]
+            else:
+                urls = _URL.findall(line)
+                if not urls:
+                    continue
+                title, url = "", urls[0]
+            b.shelf.append((normalize_url(url), mark.group(1).lower(), title.strip()))
     return b
+
+
+def resolve_citations(brief: Brief) -> None:
+    """For claims with no cited_urls, try to resolve citations by NAME against
+    the source shelf's titles. Conservative and deterministic: a shelf entry
+    matches a claim only when at least 2 of its distinctive title tokens
+    appear in the claim text AND at least half of its distinctive title
+    tokens appear. Every matching entry's URL is attached (ambiguity is fine
+    -- citing two named sources means both are cited). Claims that already
+    have cited_urls, or that match nothing on the shelf, are left untouched."""
+    for c in brief.claims:
+        if c.cited_urls:
+            continue
+        claim_tokens = _tokenize(c.full_text or c.text)
+        if not claim_tokens:
+            continue
+        matched_urls = []
+        for url, _mark, title in brief.shelf:
+            title_tokens = _tokenize(title)
+            if not title_tokens:
+                continue
+            overlap = title_tokens & claim_tokens
+            if len(overlap) >= 2 and 2 * len(overlap) >= len(title_tokens):
+                if url not in matched_urls:
+                    matched_urls.append(url)
+        if matched_urls:
+            c.cited_urls = matched_urls
+            c.resolved_via_shelf = True
