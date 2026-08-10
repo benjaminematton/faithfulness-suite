@@ -13,7 +13,10 @@ SLUG=$(echo "$PROJECT" | sed 's#[/.]#-#g')
 DIR="$CONFIG/projects/$SLUG"
 TRANSCRIPT=$(ls -t "$DIR"/*.jsonl 2>/dev/null | head -1)
 [ -n "$TRANSCRIPT" ] || { echo "no session jsonl under $DIR"; exit 2; }
-BRIEF=$(mktemp /tmp/brief-XXXX.md)
+# NOTE: trailing X's are required. BSD/macOS mktemp only substitutes X's at the END of
+# the template, so "brief-XXXX.md" was taken literally: the first call created a real file
+# named brief-XXXX.md and every call after it died on "File exists" (exit 3 = INFRA).
+BRIEF=$(mktemp "${TMPDIR:-/tmp}/brief-XXXXXXXX")
 python3 - "$TRANSCRIPT" "$BRIEF" <<'PY'
 import json, sys
 brief = None

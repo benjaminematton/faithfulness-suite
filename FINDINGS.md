@@ -418,3 +418,36 @@ Implications:
 Ops note, recorded for honesty: these "subscription" runs billed the API (~$5; auth
 precedence issue with nested claude invocations) — the data is real regardless and the
 catch was worth the spend. The audit itself cost $0 (deterministic).
+
+## Failed-fetch rule: verified in production; three new gaps (2026-08-09)
+
+Re-test of the accelerator topic with the fixed skill reproduced the trigger organically
+(two ECONNREFUSED fetches of the Seitz et al. full-text PDF — a load-bearing source) and
+the brief handled it honestly: failed URL absent from the brief, shelf entry reads
+"(read, abstract only) … full text unreachable this session" pointing at the RePEc
+abstract that DID fetch, claims table scoped accordingly. Zero D1/D2 across 21 claims and
+10 shelf entries. **The failed-fetch rule holds on its first live test** (rule shipped as
+become-expert-skill e2f46e8, deployed to all three config dirs). Caveat: this trigger was
+connection-refusal, not the original oversized-PDF case.
+
+Gaps surfaced by the same test, in priority order:
+
+1. **D1 is blind to name-only citations.** This brief cites by source NAME ("GALI Does
+   Acceleration Work? pp.9-10 (read)") not URL; cited_urls is empty for all 21 claims, so
+   the strongest deterministic check inspected nothing and five verified claims took
+   spurious no-citation downgrades. If briefs drift to name citations, D1 silently stops
+   working. Fix direction: resolve claim citations against the source shelf (name -> URL
+   mapping) before the no-citation downgrade; flag genuinely unresolvable names.
+2. **Truncated fetches are invisible to D2.** Partial content arrives without is_error, so
+   it lands in transcript.fetched and looks read. The "truncated" half of the new rule is
+   instruction-only. Possible heuristic: flag fetches whose content ends mid-sentence or
+   whose length hits a known cap; low confidence, needs design.
+3. **Abstract-read counted toward verification.** The brief honestly labeled an
+   abstract-only read, then still counted it toward a verified claim. Next rule candidate:
+   "abstract/landing-page reads do not count toward the 2-read verification bar."
+
+Harness bug found and fixed by the local reviewing session: BSD mktemp in
+tools/audit_latest.sh took its template literally (non-trailing X's), killing every audit
+after the first with a bogus infra error. Fixed with trailing-X template; committed with
+this entry. Also corrected: SKILL.md checklist preamble said "five" while listing six;
+~/.claude's deployed copy was a stale July 28 version until this deploy.
