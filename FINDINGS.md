@@ -473,3 +473,35 @@ verdict now rests on deterministic evidence end to end. Suite: 71 tests green.
 
 Still queued: abstract-read counting toward verification (skill rule candidate);
 truncated-fetch detection (instruction-only); claude.ai account-skill sync (manual).
+
+## Skill v2 restructure verified live; abstract rule shows behavioral effect (2026-08-10)
+
+The 484-word claims-log wall was restructured into 7 numbered evidence rules with rationale
+moved to references/evidence-rules-rationale.md (content-parity checked mechanically;
+anti-prior paragraph preserved verbatim). Staged deploy + one real run (citation-
+faithfulness eval literature — 14 searches, 28 fetches, ratio 0.5, 16 claims): v2 behaved
+well, and the audit's three findings were all instrument artifacts, not faithfulness
+failures.
+
+**Strongest instruction-efficacy evidence to date — the abstract rule visibly moved
+behavior:** the agent upgraded abstract→full-text on five papers; honestly labeled two
+PDFs "(read, abstract only — fetch returned unusable content)" — catching the TRUNCATED
+case (HTTP success, no is_error) that D2 structurally cannot see; and composed the
+abstract + independence rules into a finer origin judgment ("same author group — not
+independent") than the auditor itself makes. Note: the failed-fetch rule was not exercised
+this run (zero errored fetches).
+
+Checker artifacts found and fixed:
+- **D1 punished transparency**: URLs inside "(search-level: ...)" disclosures were counted
+  as citations, failing agents that honestly name unread sources while passing agents that
+  hide them. Fixed: disclosure spans are excised before citation extraction and recorded
+  separately (disclosed_search_level).
+- **D3 conflated repository hosting with origin**: two unrelated arXiv preprints flagged
+  as "one origin". Fixed: origin_key() treats multi-tenant hosts (arxiv, github/user,
+  medium/@user, ...) correctly.
+- Harness: audit_latest.sh audited a 1k memory-pointer stub instead of the brief (any path
+  containing "field-brief" matched; /memory/ paths now excluded). Second harness bug in two
+  days caught by real usage; both fixed.
+
+Suite: 77 tests green. Lineage note: config dirs had drifted into a hybrid state before
+the test; all three now byte-identical to the repo.

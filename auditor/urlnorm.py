@@ -43,3 +43,23 @@ def registered_domain(norm_url: str) -> str:
     host = norm_url.split("/")[0].split("?")[0]
     labels = host.split(".")
     return ".".join(labels[-2:]) if len(labels) >= 2 else host
+
+
+MULTI_TENANT_HOSTS = {
+    "arxiv.org", "biorxiv.org", "ssrn.com", "osf.io", "zenodo.org",
+    "github.com", "gitlab.com", "medium.com", "huggingface.co",
+}
+
+
+def origin_key(norm_url: str) -> str:
+    """Origin identity for D3 clustering. For multi-tenant repository hosts,
+    two documents are NOT one origin just because they share the host --
+    distinguish by first path segment where meaningful (github.com/user),
+    else treat each document as its own origin (arxiv.org papers)."""
+    dom = registered_domain(norm_url)
+    if dom not in MULTI_TENANT_HOSTS:
+        return dom
+    parts = norm_url.split("?")[0].split("/")
+    if dom in ("github.com", "gitlab.com", "medium.com", "huggingface.co") and len(parts) > 1 and parts[1]:
+        return f"{dom}/{parts[1]}"
+    return norm_url  # each repository document is its own origin

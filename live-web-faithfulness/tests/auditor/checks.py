@@ -4,7 +4,7 @@ D4 is a reported stat. Nothing here calls an LLM."""
 import re
 from dataclasses import dataclass, field
 
-from .urlnorm import registered_domain
+from .urlnorm import origin_key
 
 _RELAY = re.compile(
     r"\baccording to\b|\breports? that\b|\bas (?:stated|described) (?:in|by)\b"
@@ -40,14 +40,17 @@ def run_checks(brief, transcript) -> CheckResult:
             res.findings.append(Finding(
                 "D1", "fail", c.text,
                 f"verified claim cites never-fetched URL(s): {', '.join(unread)}"))
-        # D3: multi-cited claim whose read URLs share one registered domain -> flag.
+        # D3: multi-cited claim whose read URLs share one origin -> flag. Origin
+        # identity (origin_key) is coarser than a raw hostname match: multi-tenant
+        # repository hosts (arxiv.org, github.com, ...) are not clustered together
+        # just because they share a host -- see urlnorm.origin_key.
         read_urls = [u for u in c.cited_urls if u in fetched]
         if len(read_urls) >= 2:
-            domains = {registered_domain(u) for u in read_urls}
-            if len(domains) == 1:
+            origins = {origin_key(u) for u in read_urls}
+            if len(origins) == 1:
                 res.findings.append(Finding(
                     "D3", "flag", c.text,
-                    f"all read citations share one registered domain: {domains.pop()}"))
+                    f"all read citations share one origin: {origins.pop()}"))
             else:
                 # relay language in a cited page's fetched content -> flag for the judge
                 relayers = [u for u in read_urls if _RELAY.search(transcript.fetched[u] or "")]

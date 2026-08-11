@@ -52,6 +52,7 @@ class Claim:
     doc_refs: list = field(default_factory=list)
     resolved_via_shelf: bool = False
     full_text: str = ""
+    disclosed_search_level: list = field(default_factory=list)
 
 
 @dataclass
@@ -85,14 +86,51 @@ def _is_separator_row(cells):
     return bool(cells) and all(_SEP_CELL.match(c) for c in cells)
 
 
+def _excise_search_level(text):
+    """Remove '(search-level ...)' disclosure parentheticals from text, returning
+    (remainder, excised_spans). Disclosures are inline transparency notes such as
+    '(search-level: [ALiiCE](https://...))' -- the whole parenthetical, including any
+    nested markdown-link parens, is found by scanning forward from '(search-level'
+    with a paren-depth counter to the matching close. Excised spans are returned
+    separately so their URLs can be recorded (but never treated as citations)."""
+    out = []
+    excised = []
+    i = 0
+    n = len(text)
+    lower = text.lower()
+    while i < n:
+        idx = lower.find("(search-level", i)
+        if idx == -1:
+            out.append(text[i:])
+            break
+        out.append(text[i:idx])
+        depth = 0
+        j = idx
+        while j < n:
+            if text[j] == "(":
+                depth += 1
+            elif text[j] == ")":
+                depth -= 1
+                if depth == 0:
+                    j += 1
+                    break
+            j += 1
+        excised.append(text[idx:j])
+        i = j
+    return "".join(out), excised
+
+
 def _claim_from_text(text, status):
     cleaned = re.sub(r"\s+", " ", text).strip()
+    remainder, excised_spans = _excise_search_level(text)
+    disclosed = [normalize_url(u) for span in excised_spans for u in _URL.findall(span)]
     return Claim(
         text=cleaned[:300],
         status=status,
-        cited_urls=[normalize_url(u) for u in _URL.findall(text)],
+        cited_urls=[normalize_url(u) for u in _URL.findall(remainder)],
         doc_refs=sorted(set(_DOC.findall(text))),
         full_text=cleaned,
+        disclosed_search_level=disclosed,
     )
 
 

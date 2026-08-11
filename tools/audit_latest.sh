@@ -24,9 +24,14 @@ for line in open(sys.argv[1]):
     try: r = json.loads(line)
     except: continue
     for c in ((r.get("message") or {}).get("content") or []):
-        if isinstance(c, dict) and c.get("type") == "tool_use" and c.get("name") == "Write" \
-           and "field-brief" in str((c.get("input") or {}).get("file_path", "")):
-            brief = c["input"]["content"]
+        if isinstance(c, dict) and c.get("type") == "tool_use" and c.get("name") == "Write":
+            path = str((c.get("input") or {}).get("file_path", ""))
+            # The agent may also save a memory POINTER whose filename repeats the brief slug
+            # (~/.claude*/projects/*/memory/field-brief-*.md). That stub is ~1k chars with no
+            # claims table, so auditing it yields "parser found no claims" (INFRA). Only the
+            # brief written into the run's working directory counts.
+            if "field-brief" in path and "/memory/" not in path:
+                brief = c["input"]["content"]
 if not brief:
     sys.exit("no field-brief Write found in transcript")
 open(sys.argv[2], "w").write(brief)

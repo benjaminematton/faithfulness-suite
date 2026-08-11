@@ -396,6 +396,33 @@ def test_resolution_uses_full_text_beyond_display_truncation():
     assert "galidata.org/rocket" not in ver.cited_urls  # named neither Rocket nor Runway
 
 
+def test_disclosed_search_level_url_excluded_from_cited_urls():
+    md = """# B
+## Key claims log
+| Claim | Status | Source(s) |
+|---|---|---|
+| x is true | verified | [Verified Misguidance](https://a.com/x); [CiteEval](https://b.com/y); (search-level: [ALiiCE](https://c.com/z)) |
+"""
+    b = parse_brief(md)
+    c = b.claims[0]
+    assert "c.com/z" not in c.cited_urls
+    assert set(c.cited_urls) == {"a.com/x", "b.com/y"}
+    assert c.disclosed_search_level == ["c.com/z"]
+
+
+def test_disclosed_search_level_nested_parens_both_excised():
+    md = """# B
+## Key claims log
+| Claim | Status | Source(s) |
+|---|---|---|
+| x is true | verified | (search-level: [A](https://a.com/1), [B](https://b.com/2)) |
+"""
+    b = parse_brief(md)
+    c = b.claims[0]
+    assert c.cited_urls == []
+    assert set(c.disclosed_search_level) == {"a.com/1", "b.com/2"}
+
+
 def test_qualified_shelf_marks_parse():
     md = """# B
 ## Sources
