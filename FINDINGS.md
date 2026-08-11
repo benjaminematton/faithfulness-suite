@@ -521,7 +521,7 @@ ZERO live runs. The next real become-expert run plus free audit is the actual te
 recreated the lineage drift the deploy.sh README warns about — the repo must get v2 BEFORE
 any deploy, staged copies lose to deploys by design.
 
-## v2 restructure verified live — genuinely this time (2026-08-10)
+## v2 restructure: first live run clean — n=1, stub judge, no format or citation-integrity regressions (2026-08-10)
 
 Transcript-confirmed v2 (marker "Verified means 2+ independent sources you read in full"
 appears in v2 only; present in session 0bb899a8). Topic: measuring prompt-change effects.
