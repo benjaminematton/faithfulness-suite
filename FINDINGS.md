@@ -520,3 +520,22 @@ skill repo (0fbcbab), and byte-identical across all three local config dirs — 
 ZERO live runs. The next real become-expert run plus free audit is the actual test. Lesson for the log: two writers deploying to the same config dirs
 recreated the lineage drift the deploy.sh README warns about — the repo must get v2 BEFORE
 any deploy, staged copies lose to deploys by design.
+
+## v2 restructure verified live — genuinely this time (2026-08-10)
+
+Transcript-confirmed v2 (marker "Verified means 2+ independent sources you read in full"
+appears in v2 only; present in session 0bb899a8). Topic: measuring prompt-change effects.
+Clean audit, exit 0: 28 claims, 20 shelf entries, 14 searches / 22 fetches (ratio 0.64),
+zero findings, zero status downgrades.
+
+Rule behavior under the new format: 4/28 verified (each naming 2-3 read sources), 21 held
+at single-source rather than rounded up, 3 inferences labeled as derived with no citations
+claimed. Rule 5 visible (Sclar 2024 / Mizrahi 2024 held single-source with "TACL full text
+403-blocked" and "(abstract only)" disclosed, not counted); anti-prior fired verbatim
+("this runs against common belief"). Scoped honestly: stub judge (citation-integrity and
+format only, no entailment check), n=1 — and rule 4 (failed/truncated fetch) has now
+shipped through three runs without being exercised once.
+
+Meta-note: the brief this test produced is itself a researched survey of measuring prompt
+changes (it argues n=1 is the weakest evidence for a prompt edit and estimates ~969 items
+for 3-point sensitivity at 80% power) — relevant reading for this suite's own limits.
