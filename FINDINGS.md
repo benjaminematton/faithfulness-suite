@@ -505,3 +505,18 @@ Checker artifacts found and fixed:
 
 Suite: 77 tests green. Lineage note: config dirs had drifted into a hybrid state before
 the test; all three now byte-identical to the repo.
+
+### CORRECTION (2026-08-10, same day): the v2 restructure was NOT what ran
+
+Transcript check (session f716b762: the loaded skill text contains the old claims-log wall,
+not the v2 "Evidence rules" block): a pre-run deploy from the skill repo overwrote the
+staged v2 copy, so the test above validated the evidence rules under the OLD structure.
+What stands: the abstract rule's behavioral evidence (rule text identical in both
+versions), the checker-artifact findings and fixes, and the harness fixes. What does NOT
+stand: any claim that the v2 restructure was live-tested. v2 status as of this commit:
+mechanical content-parity checked (all 7 rules present, no rule lost in the move to
+references/evidence-rules-rationale.md), in the claude.ai account copy, committed to the
+skill repo (0fbcbab), and byte-identical across all three local config dirs — but still
+ZERO live runs. The next real become-expert run plus free audit is the actual test. Lesson for the log: two writers deploying to the same config dirs
+recreated the lineage drift the deploy.sh README warns about — the repo must get v2 BEFORE
+any deploy, staged copies lose to deploys by design.
