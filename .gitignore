@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 jobs/
+.claude/
+_to_delete/
