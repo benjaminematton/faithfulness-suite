@@ -138,6 +138,24 @@ against the 25/25 baseline per-task, not against suite means from before it.
 
 The judge key comes from `~/evals/.anthropic.env` via each task's `[verifier.env]` `ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"` passthrough.
 
+### Judging on subscription instead of the API
+
+`VERIFIER_JUDGE=cli` makes the judge run through headless Claude Code (`claude -p`) on
+your subscription instead of the `anthropic` SDK. Auth is the CLI's own login or
+`CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`); `ANTHROPIC_API_KEY` is **stripped
+from the child env** so cli mode can never silently bill the API. Same model pin
+(`claude-opus-4-8` — requires a plan that serves Opus), same JUDGE_VOTES, same
+raise-→-exit-3 contract; a malformed CLI reply is infra, never a verdict.
+
+- **Local / retro audits** (the main use): works immediately on a logged-in machine —
+  `VERIFIER_JUDGE=cli python3 -m auditor.audit --brief B.md --transcript S.jsonl`.
+- **Inside Harbor: not supported, by choice.** The arm images deliberately do NOT
+  install the CLI. `harbor check` (2026-08-12) flagged the unpinned npm package and a
+  verifier-only dependency baked into the image, and a long-lived OAuth token inside a
+  `network_mode = "public"` container is a worse leak surface than a scoped API key —
+  for a judge cost of cents, while the agent runs are where the money goes. In-container
+  judging stays on the API.
+
 ## Validation controls (per task)
 
 - **Oracle** (`-a oracle`): writes a corpus-faithful brief → must score **1.0**.
@@ -196,6 +214,60 @@ Works on Harbor job transcripts and real `~/.claude-work` sessions alike — it 
 fixtures (Aug 3 must fail, Aug 8 must pass) are local-only; see `auditor/fixtures/README.md`.
 Run `tools/sync_auditor.sh` after changing `auditor/` to update the vendored copy in the
 Harbor task.
+
+### Landing gate — the in-flight half (vendored from the skill)
+
+Runs *during* Phase 2 against a **draft claims log** instead of after the fact, and blocks
+the Phase 2 → Phase 3 transition. Deterministic only — it never calls an LLM, so it costs
+nothing and carries no self-preference risk. Design, eval plan and as-built notes:
+[`docs/specs/2026-08-12-landing-gate-design.md`](docs/specs/2026-08-12-landing-gate-design.md).
+
+> [!IMPORTANT]
+> **The gate is product code, not eval code.** `urlnorm/transcript/brief/checks/gate/gate_cli`
+> are owned by [`become-expert-skill/scripts/auditor/`](https://github.com/benjaminematton/become-expert-skill)
+> and **vendored here** — edit them there, then run `bash tools/sync_gate_core.sh [path]`
+> followed by `bash tools/sync_auditor.sh`. `auditor/tests/test_vendor_drift.py` fails if a
+> vendored file is edited in place, so the runtime this suite grades cannot silently fork
+> from the runtime that ships. `judge.py`, `report.py` and `audit.py` are eval-only and are
+> owned here. `auditor/CORE-VENDORED.md` records the synced sha256s.
+
+    python3 -m auditor.gate_cli --log DRAFT-LOG.md --transcript S.jsonl \
+        [--round N] [--prev PREV-LOG.md] [--json]
+
+| Gate | Fires on | Effect |
+|---|---|---|
+| G0 | claims-log row with an unrecognized status (D0) | block |
+| G1 | `verified` claim citing a never-fetched URL (D1) | block |
+| G2 | shelf marks `(read)` on an unfetched URL (D2) | block |
+| G3 | D3 origin/relay flag on a claim **still** marked `verified` | block |
+| G4 | `verified` claim resting on **fewer than 2 read** citations | block |
+| W | search:fetch ratio > 4.0 over ≥12 searches | **advisory only, never blocks** |
+
+**G4 is new and gate-local.** It is deliberately not added to `checks.py`, because the
+post-hoc auditor's finding set backs recorded baselines. It exists because the mining
+report lists three deterministic sub-forms of F1 and `checks.py` only covered two:
+single-citation `verified` (Aug 3's ~$100k/12-week claim) trips neither D1 — its one source
+*was* fetched — nor D3, which needs 2+ read URLs to compare origins.
+
+**W never blocks, by design.** FINDINGS records `single_source_flagged` as flawed for
+scoring honest budget triage as unfaithfulness; a blocking ratio gate repeats that mistake
+against a run that searched widely and correctly declined to fetch junk.
+
+**The gate cannot detect hedging.** G1–G4 are all satisfiable by demoting every claim to
+`single-source` — the blanket-downgrade failure. `--prev` reports status changes as a stat
+so the tell is visible, but the counterweight stays in the rubric: any eval arm for this
+gate **must keep `verified_claim_as_established` scored**.
+
+Round budget is 2. At the cap the gate stops offering "search again" and instructs
+demotion-or-disclosure — an honest hole beats another round.
+
+    bash tools/gate_retro.sh          # real (local-only) fixtures: aug03 must block, aug08 must clear
+    python3 tools/run_tests_stdlib.py auditor/tests    # no-PyPI test runner (see below)
+
+`tools/run_tests_stdlib.py` runs the `tmp_path`-only tests without pytest, closing the
+"pytest half is unrunnable from a Claude session" gap in STATUS.md. It reports anything it
+cannot support as `SKIP-UNSUPPORTED` rather than passing it — it is not a pytest
+replacement. Current state: **20 passed, 0 failed, 4 skipped-unsupported** here; the core's own 85 tests run in the skill repo via `scripts/run_tests.py`.
 
 Known limitations: query strings (beyond utm_*/fbclid/gclid tracking params) compare
 verbatim in URL identity; claims-log tables need a header naming both Claim and Status;

@@ -57,6 +57,13 @@ def _system(claims, fetched, flags):
     return "\n\n".join(parts)
 
 
+def _validate(out, n_claims):
+    got = {v["index"] for v in out.get("verdicts", [])}
+    if got != set(range(n_claims)):
+        raise ValueError(f"judge covered indices {sorted(got)}, wanted 0..{n_claims-1}")
+    return out
+
+
 def _judge_once(claims, fetched, flags):
     import anthropic
 
@@ -71,11 +78,40 @@ def _judge_once(claims, fetched, flags):
                    "reason, reason before booleans."}],
     )
     text = next(b.text for b in resp.content if b.type == "text")
-    out = json.loads(text)
-    got = {v["index"] for v in out.get("verdicts", [])}
-    if got != set(range(len(claims))):
-        raise ValueError(f"judge covered indices {sorted(got)}, wanted 0..{len(claims)-1}")
-    return out
+    return _validate(json.loads(text), len(claims))
+
+
+def _judge_once_cli(claims, fetched, flags):
+    """Subscription-billed judging via headless Claude Code (`claude -p`).
+
+    VERIFIER_JUDGE=cli. Auth comes from the CLI's own login or CLAUDE_CODE_OAUTH_TOKEN
+    (`claude setup-token`) -- ANTHROPIC_API_KEY is STRIPPED from the child env so this
+    path can never silently fall back to API billing; that is the point of the mode.
+    Same model pin, same schema, same exit-3-on-failure contract as the API path. The
+    CLI cannot enforce json_schema server-side, so the object is extracted from the
+    result text and validated here -- a malformed reply raises (infra), never a verdict.
+    """
+    import subprocess
+
+    env = dict(os.environ)
+    env.pop("ANTHROPIC_API_KEY", None)
+    exe = os.environ.get("CLAUDE_CLI", "claude")
+    prompt = ("Return ONLY a JSON object matching this schema — no prose, no code "
+              "fences: " + json.dumps(JUDGE_SCHEMA) +
+              "\nReturn verdicts for every claim index, each with its own short "
+              "reason, reason before booleans.")
+    p = subprocess.run(
+        [exe, "-p", prompt, "--model", CLAUDE_JUDGE_MODEL,
+         "--output-format", "json", "--system-prompt", _system(claims, fetched, flags)],
+        capture_output=True, text=True, env=env, timeout=300)
+    if p.returncode != 0:
+        raise RuntimeError(f"claude CLI exited {p.returncode}: {p.stderr[:400]}")
+    envelope = json.loads(p.stdout)
+    text = envelope.get("result", "") if isinstance(envelope, dict) else ""
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end <= start:
+        raise ValueError(f"CLI judge returned no JSON object: {text[:200]!r}")
+    return _validate(json.loads(text[start:end + 1]), len(claims))
 
 
 def judge_claims(claims, fetched, flags):
@@ -88,8 +124,9 @@ def judge_claims(claims, fetched, flags):
                  "origins_independent": (good if n_multi(c) else None),
                  "reason": f"stubbed {mode}"} for c in claims]
 
+    once = _judge_once_cli if mode == "cli" else _judge_once
     votes_n = max(1, int(os.environ.get("JUDGE_VOTES", "1")))
-    votes = [_judge_once(claims, fetched, flags) for _ in range(votes_n)]
+    votes = [once(claims, fetched, flags) for _ in range(votes_n)]
     out = []
     for i, c in enumerate(claims):
         per = [next(v for v in vote["verdicts"] if v["index"] == i) for vote in votes]

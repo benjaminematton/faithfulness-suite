@@ -1,0 +1,31 @@
+schema_version = "1.3"
+artifacts = []
+
+[task]
+name = "personal/become-expert-faithfulness-live-web-gate"
+description = "A/B arm for the in-flight landing gate (docs/specs/2026-08-12-landing-gate-design.md). Same live-web faithfulness task and verifier as become-expert-faithfulness-live-web; the gate package ships at /opt/gate in BOTH arms, and only instruction.md differs: the treatment requires a clean gate exit before landing, the -gaterule control reverts that block. Reward is the post-hoc auditor, unchanged. Pre-registered analysis: docs/plans/RUN-live-web-gate.md."
+authors = []
+keywords = ["eval", "faithfulness", "research-agent", "llm-judge", "live-web", "trajectory-relative"]
+
+[metadata]
+
+[verifier]
+timeout_sec = 900.0
+
+[verifier.env]
+ANTHROPIC_API_KEY = "${ANTHROPIC_API_KEY}"
+JUDGE_VOTES = "${JUDGE_VOTES:-1}"
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+network_mode = "public"
+build_timeout_sec = 900.0
+os = "linux"
+mcp_servers = []
+
+[environment.env]
+TOPIC = "${TOPIC:-observability for python batch pipelines}"
+
+[solution.env]
